@@ -422,6 +422,8 @@ def clean_duplicates():
         article_rows = df.iloc[:3641].copy()  # Up to row 3641 (before Warengruppe header at 3642)
         warengruppe_section = df.iloc[3641:].copy()  # Warengruppe section and beyond
 
+        duplicates_removed = 0
+
         # If search_term provided, use pandas to filter matching rows directly
         if search_term:
             search_term = search_term.replace(' ', '').strip()
@@ -454,6 +456,7 @@ def clean_duplicates():
                 number_pair = (col1, col2)
                 if number_pair in seen_numbers:
                     rows_to_delete.append(idx)
+                    duplicates_removed += 1
                     print(f"[DELETED] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2}")
                 else:
                     seen_numbers.add(number_pair)
@@ -461,7 +464,7 @@ def clean_duplicates():
             # Remove duplicate rows from original dataframe
             if rows_to_delete:
                 article_rows = article_rows.drop(index=rows_to_delete)
-                print(f"Removed {len(rows_to_delete)} duplicate rows")
+                print(f"Removed {duplicates_removed} duplicate rows")
 
         rows_to_keep = article_rows
 
