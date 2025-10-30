@@ -459,8 +459,10 @@ def clean_duplicates():
                 # Extract only matching rows from dataframe
                 matching_rows = article_rows.loc[list(matching_csv_rows)]
 
-                # Find duplicates within matching rows only
-                seen_numbers = set()
+                print(f"=== Checking {len(matching_rows)} rows for duplicates ===")
+
+                # Find TRUE duplicates (identical rows) within matching rows only
+                seen_rows = set()
                 rows_to_delete = []
 
                 for idx, row in matching_rows.iterrows():
@@ -468,14 +470,22 @@ def clean_duplicates():
                     col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
                     bez1 = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ''
                     bez2 = str(row.iloc[3]).strip() if len(row) > 3 and not pd.isna(row.iloc[3]) else ''
+                    warengruppe = str(row.iloc[4]).strip() if len(row) > 4 and not pd.isna(row.iloc[4]) else ''
 
-                    number_pair = (col1, col2)
-                    if number_pair in seen_numbers:
+                    # Check if ENTIRE row is duplicate (all columns must match)
+                    row_tuple = (col1, col2, bez1, bez2, warengruppe)
+
+                    print(f"[CHECK] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2} | {warengruppe}")
+
+                    if row_tuple in seen_rows:
                         rows_to_delete.append(idx)
                         duplicates_removed += 1
-                        print(f"[DELETED] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2}")
+                        print(f"  >>> DUPLICATE! Will delete this row")
                     else:
-                        seen_numbers.add(number_pair)
+                        seen_rows.add(row_tuple)
+                        print(f"  >>> First occurrence, keeping")
+
+                print(f"=== End of duplicate check ===")
 
                 # Remove duplicate rows from original dataframe
                 if rows_to_delete:
