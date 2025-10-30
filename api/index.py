@@ -19,7 +19,6 @@ CORS(app)
 # Global variable to store article data
 article_data = None
 warengruppe_mapping = {}
-article_index = {}  # Index: number -> list of row indices
 
 # Define validation patterns
 PATTERNS = {
@@ -29,8 +28,8 @@ PATTERNS = {
 }
 
 def load_data():
-    """Load article data from CSV file and build index."""
-    global article_data, warengruppe_mapping, article_index
+    """Load article data from CSV file."""
+    global article_data, warengruppe_mapping
 
     # For Vercel deployment, the CSV should be in the root Vorlagen directory
     # Try multiple possible paths
@@ -52,7 +51,6 @@ def load_data():
 
         # Create a clean dataset with the columns we need
         article_data = []
-        article_index = {}  # Reset index
 
         for idx, row in df.iterrows():
             col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
@@ -65,7 +63,6 @@ def load_data():
             if col1 == '' and col2 == '':
                 continue
 
-            entry_idx = len(article_data)
             article_data.append({
                 'number1': col1,
                 'number2': col2,
@@ -75,18 +72,7 @@ def load_data():
                 'row_index': idx + 2  # +2 for 1-indexed with header
             })
 
-            # Build index for fast lookup
-            if col1:
-                if col1 not in article_index:
-                    article_index[col1] = []
-                article_index[col1].append(entry_idx)
-            if col2:
-                if col2 not in article_index:
-                    article_index[col2] = []
-                article_index[col2].append(entry_idx)
-
         print(f"Loaded {len(article_data)} article entries from {csv_path}")
-        print(f"Built index with {len(article_index)} unique numbers")
 
         # Load Warengruppe descriptions
         # Read the CSV again without header to get the Warengruppe mapping section
@@ -140,16 +126,74 @@ def normalize_item_number(number: str) -> List[str]:
 
     # Try various Item number patterns if we have enough digits
     if clean.isdigit() and len(clean) >= 4:
+        # Common Item patterns:
+        # 0.0.XXX.XX  (5 digits: 62177 -> 0.0.621.77)
+        # 0.0.XXXX.XX (6 digits: 123456 -> 0.0.1234.56)
+        # X.X.XXX.XX  (7+ digits: 0062177 -> 0.0.621.77)
+
+        if len(clean) == 5:
+            # 5 digits: assume 0.0.XXX.XX format
+            variations.append(f"0.0.{clean[0:3]}.{clean[3:]}")
+
+        if len(clean) == 6:
+            # 6 digits: try both X.X.XX.XX and 0.0.XXXX.XX
+            variations.append(f"{clean[0]}.{clean[1]}.{clean[2:4]}.{clean[4:]}")
+            variations.append(f"0.0.{clean[0:4]}.{clean[4:]}")
+
         if len(clean) >= 7:
+            # 7+ digits: X.X.XXX.XX (e.g., 0062177 -> 0.0.621.77)
             variations.append(f"{clean[0]}.{clean[1]}.{clean[2:5]}.{clean[5:]}")
 
         if len(clean) >= 8:
+            # 8+ digits: X.X.XXXX.XX (e.g., 00123456 -> 0.0.1234.56)
             variations.append(f"{clean[0]}.{clean[1]}.{clean[2:6]}.{clean[6:]}")
 
-        if len(clean) == 6:
-            variations.append(f"{clean[0]}.{clean[1]}.{clean[2:4]}.{clean[4:]}")
-
     return list(set(variations))  # Remove duplicates
+
+def consolidate_duplicates(results: List[Dict]) -> List[Dict]:
+    """
+    Consolidate duplicate results that have the same article numbers.
+    Takes longest bez1, longest bez2, and first warengruppe from each group.
+    """
+    if len(results) <= 1:
+        return results
+
+    # Group results by normalized number pair
+    groups = {}
+    for result in results:
+        num1 = result['input_number']
+        num2 = result['corresponding_number']
+        # Normalize: always put smaller number first for grouping
+        pair_key = tuple(sorted([num1, num2]))
+
+        if pair_key not in groups:
+            groups[pair_key] = []
+        groups[pair_key].append(result)
+
+    # Consolidate each group
+    consolidated = []
+    for pair_key, group in groups.items():
+        # Take the first result as base
+        merged = group[0].copy()
+
+        # Find longest bez1
+        longest_bez1 = max(group, key=lambda x: len(x.get('bez1', '')))
+        merged['bez1'] = longest_bez1['bez1']
+
+        # Find longest bez2
+        longest_bez2 = max(group, key=lambda x: len(x.get('bez2', '')))
+        merged['bez2'] = longest_bez2['bez2']
+
+        # Find first non-empty warengruppe
+        for item in group:
+            if item.get('warengruppe', '').strip():
+                merged['warengruppe'] = item['warengruppe']
+                merged['warengruppe_description'] = item.get('warengruppe_description', '')
+                break
+
+        consolidated.append(merged)
+
+    return consolidated
 
 def search_number(search_term: str) -> List[Dict]:
     """Search for an article number and return all matching entries."""
@@ -198,7 +242,8 @@ def search_number(search_term: str) -> List[Dict]:
                 })
                 break
 
-    return results
+    # Consolidate duplicates before returning
+    return consolidate_duplicates(results)
 
 @app.route('/api/health', methods=['GET'])
 def health_check():
@@ -375,122 +420,6 @@ def stats():
         stats['column2'][type2] += 1
 
     return jsonify(stats)
-
-@app.route('/api/clean-duplicates', methods=['POST'])
-def clean_duplicates():
-    """Clean duplicate entries from the CSV file. Only processes rows matching search_term if provided."""
-    try:
-        data = request.get_json()
-        search_term = data.get('search_term', None) if data else None
-
-        # Try multiple possible paths for Vercel
-        possible_paths = [
-            os.path.join(os.path.dirname(__file__), '..', 'Vorlagen', 'ArtNrn.csv'),
-            os.path.join(os.getcwd(), 'Vorlagen', 'ArtNrn.csv'),
-            'Vorlagen/ArtNrn.csv'
-        ]
-
-        csv_path = None
-        for path in possible_paths:
-            if os.path.exists(path):
-                csv_path = path
-                break
-
-        if not csv_path:
-            return jsonify({'error': 'CSV file not found'}), 404
-
-        # Create backup
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        backup_path = csv_path.replace('.csv', f'_backup_{timestamp}.csv')
-        shutil.copy2(csv_path, backup_path)
-        print(f"Created backup: {backup_path}")
-
-        # Read the full CSV
-        df = pd.read_csv(csv_path, sep=';', header=0, encoding='latin-1')
-
-        # Store the article data rows (before Warengruppe section)
-        article_rows = df.iloc[:3641].copy()  # Up to row 3641 (before Warengruppe header at 3642)
-        warengruppe_section = df.iloc[3641:].copy()  # Warengruppe section and beyond
-
-        duplicates_removed = 0
-
-        # If search_term provided, use index for instant lookup (O(1) instead of O(n))
-        if search_term:
-            search_term = search_term.replace(' ', '').strip()
-            search_variations = normalize_item_number(search_term)
-            print(f"Cleaning duplicates for: {search_term} (variations: {search_variations})")
-
-            # Use index to find matching row indices instantly - NO ITERATION THROUGH ALL ROWS!
-            matching_csv_rows = set()
-            for variation in search_variations:
-                if variation in article_index:
-                    for entry_idx in article_index[variation]:
-                        # Convert entry index to CSV row index (entry.row_index gives us CSV line)
-                        csv_row_idx = article_data[entry_idx]['row_index'] - 2  # CSV row to df index
-                        matching_csv_rows.add(csv_row_idx)
-
-            print(f"Found {len(matching_csv_rows)} rows matching search term (instant index lookup)")
-
-            if matching_csv_rows:
-                # Extract only matching rows from dataframe
-                matching_rows = article_rows.loc[list(matching_csv_rows)]
-
-                print(f"=== Checking {len(matching_rows)} rows for duplicates ===")
-
-                # Find TRUE duplicates (identical rows) within matching rows only
-                seen_rows = set()
-                rows_to_delete = []
-
-                for idx, row in matching_rows.iterrows():
-                    col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
-                    col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
-                    bez1 = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ''
-                    bez2 = str(row.iloc[3]).strip() if len(row) > 3 and not pd.isna(row.iloc[3]) else ''
-                    warengruppe = str(row.iloc[4]).strip() if len(row) > 4 and not pd.isna(row.iloc[4]) else ''
-
-                    # Check if ENTIRE row is duplicate (all columns must match)
-                    row_tuple = (col1, col2, bez1, bez2, warengruppe)
-
-                    print(f"[CHECK] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2} | {warengruppe}")
-
-                    if row_tuple in seen_rows:
-                        rows_to_delete.append(idx)
-                        duplicates_removed += 1
-                        print(f"  >>> DUPLICATE! Will delete this row")
-                    else:
-                        seen_rows.add(row_tuple)
-                        print(f"  >>> First occurrence, keeping")
-
-                print(f"=== End of duplicate check ===")
-
-                # Remove duplicate rows from original dataframe
-                if rows_to_delete:
-                    article_rows = article_rows.drop(index=rows_to_delete)
-                    print(f"Removed {duplicates_removed} duplicate rows")
-
-        rows_to_keep = article_rows
-
-        # Reconstruct the dataframe
-        cleaned_articles = pd.DataFrame(rows_to_keep)
-        cleaned_df = pd.concat([cleaned_articles, warengruppe_section], ignore_index=True)
-
-        # Save cleaned CSV
-        cleaned_df.to_csv(csv_path, sep=';', index=False, encoding='latin-1')
-        print(f"Cleaned CSV saved. Removed {duplicates_removed} duplicates.")
-
-        # Reload data
-        load_data()
-
-        return jsonify({
-            'success': True,
-            'duplicates_removed': duplicates_removed,
-            'backup_file': os.path.basename(backup_path),
-            'total_entries': len(article_data) if article_data else 0
-        })
-
-    except Exception as e:
-        print(f"Error cleaning duplicates: {e}")
-        return jsonify({'error': str(e)}), 500
 
 # Load data on module initialization
 print("Initializing API...")

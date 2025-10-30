@@ -169,19 +169,41 @@
   color: #666;
 }
 
-.ambiguous-compact {
-  font-size: 10px;
+.ambiguous-results {
+  margin-top: 4px;
 }
 
-.ambiguous-compact > p {
-  margin: 0 0 4px 0;
+.ambiguous-header {
+  font-size: 11px;
   font-weight: 600;
   color: #e65100;
+  margin-bottom: 4px;
+  padding: 3px 5px;
+  background-color: #fff3e0;
+  border-radius: 2px;
+}
+
+.ambiguous-results .result-compact {
+  margin-bottom: 4px;
+  border-left: 2px solid #e65100;
+}
+
+.ambiguous-results .result-compact:last-child {
+  margin-bottom: 0;
 }
 
 /* Batch Input Styles */
+.batch-note {
+  font-size: 9px;
+  color: #666;
+  margin-left: 6px;
+  font-style: italic;
+}
+
 .file-upload-compact {
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
 }
 
 .batch-options {
@@ -250,11 +272,30 @@
 }
 
 .batch-results-list {
-  max-height: 250px;
+  max-height: 180px;
   overflow-y: auto;
   background-color: #ffffff;
   padding: 3px;
   border-radius: 2px;
+}
+
+/* Custom scrollbar styling */
+.batch-results-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.batch-results-list::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 2px;
+}
+
+.batch-results-list::-webkit-scrollbar-thumb {
+  background: #409f95;
+  border-radius: 2px;
+}
+
+.batch-results-list::-webkit-scrollbar-thumb:hover {
+  background: #358077;
 }
 
 .batch-result-line {

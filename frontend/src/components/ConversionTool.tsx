@@ -47,11 +47,11 @@ const ConversionTool = () => {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [cleaning, setCleaning] = useState(false)
-  const [deletedCount, setDeletedCount] = useState<number>(0)
 
   // Batch conversion states
   const [file, setFile] = useState<File | null>(null)
+  const [fileDirectoryHandle, setFileDirectoryHandle] = useState<any>(null)
+  const [originalFileData, setOriginalFileData] = useState<any[][] | null>(null)
   const [columnLetter, setColumnLetter] = useState('A')
   const [targetSystem, setTargetSystem] = useState<string>('syskomp')
   const [batchLoading, setBatchLoading] = useState(false)
@@ -114,47 +114,6 @@ const ConversionTool = () => {
     }
   }
 
-  // Automatically clean database when ambiguous results are detected
-  useEffect(() => {
-    const cleanDatabase = async () => {
-      if (result && result.found && result.ambiguous && !cleaning) {
-        setCleaning(true)
-        setDeletedCount(0)
-        try {
-          const response = await fetch(`${API_URL}/clean-duplicates`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ search_term: searchNumber }),
-          })
-
-          if (response.ok) {
-            const data = await response.json()
-            console.log(`Cleaned database: removed ${data.duplicates_removed} duplicates for ${searchNumber}`)
-            setDeletedCount(data.duplicates_removed || 0)
-            // Re-search after cleaning
-            setTimeout(() => {
-              handleSearch()
-              setCleaning(false)
-              setDeletedCount(0)
-            }, 2000)
-          } else {
-            console.error('Failed to clean database')
-            setCleaning(false)
-            setDeletedCount(0)
-          }
-        } catch (err) {
-          console.error('Error cleaning database:', err)
-          setCleaning(false)
-          setDeletedCount(0)
-        }
-      }
-    }
-
-    cleanDatabase()
-  }, [result])
-
   // Batch conversion functions
   const columnLetterToIndex = (letter: string): number => {
     return letter.toUpperCase().charCodeAt(0) - 65
@@ -173,54 +132,102 @@ const ConversionTool = () => {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       handleFileSelect(e.target.files[0])
+      setFileDirectoryHandle(null) // No directory handle available from regular input
     }
   }
 
-  const handleBrowseClick = () => {
-    fileInputRef.current?.click()
+  const handleBrowseClick = async () => {
+    // Try to use File System Access API first
+    if ('showOpenFilePicker' in window) {
+      try {
+        const [fileHandle] = await (window as any).showOpenFilePicker({
+          types: [{
+            description: 'Excel and CSV Files',
+            accept: {
+              'text/csv': ['.csv'],
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+              'application/vnd.ms-excel': ['.xls']
+            }
+          }],
+          multiple: false
+        })
+
+        const file = await fileHandle.getFile()
+        handleFileSelect(file)
+
+        // Try to get the parent directory handle
+        try {
+          // Note: Getting parent directory is not directly supported in the API
+          // but we can store the file handle and use it as startIn for save dialog
+          setFileDirectoryHandle(fileHandle)
+        } catch (err) {
+          console.log('Could not get directory handle:', err)
+          setFileDirectoryHandle(null)
+        }
+      } catch (err) {
+        // User cancelled or error - do nothing
+        console.log('File picker cancelled or failed:', err)
+      }
+    } else {
+      // Fallback to regular file input
+      fileInputRef.current?.click()
+    }
   }
 
-  const parseCSV = (text: string, colIndex: number): string[] => {
+  const parseCSV = (text: string, colIndex: number): { numbers: string[], fullData: any[][] } => {
     const lines = text.split('\n')
     const numbers: string[] = []
-    let startIndex = 0
+    const fullData: any[][] = []
 
+    // Check if first row is a header
+    let hasHeader = false
     if (lines.length > 0) {
       const firstLine = lines[0].trim()
-      const columns = firstLine.split(';')
-      if (columns.length > colIndex) {
-        const firstValue = columns[colIndex].trim()
-        if (firstValue && !/^\d+(\.\d+)*$/.test(firstValue)) {
-          startIndex = 1
+      if (firstLine) {
+        const columns = firstLine.split(';')
+        if (columns.length > colIndex) {
+          const firstValue = columns[colIndex].trim()
+          if (firstValue && !/^\d+(\.\d+)*$/.test(firstValue)) {
+            hasHeader = true
+          }
         }
       }
     }
 
-    for (let i = startIndex; i < lines.length; i++) {
+    // Process all lines
+    for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim()
-      if (!line) continue
+      if (!line) continue  // Skip completely empty lines
 
       const columns = line.split(';')
-      if (columns.length > colIndex) {
-        const value = columns[colIndex].trim()
-        if (value) {
-          numbers.push(value)
+      fullData.push(columns)
+
+      // Extract number if this is a data row (not header)
+      if (i > 0 || !hasHeader) {
+        if (columns.length > colIndex) {
+          const value = columns[colIndex].trim()
+          if (value) {
+            numbers.push(value)
+          }
         }
       }
     }
 
-    return numbers
+    console.log('CSV parse:', { hasHeader, totalLines: lines.length, rowsParsed: fullData.length, numbersFound: numbers.length, colIndex })
+
+    return { numbers, fullData }
   }
 
-  const parseExcel = async (file: File, colIndex: number): Promise<string[]> => {
+  const parseExcel = async (file: File, colIndex: number): Promise<{ numbers: string[], fullData: any[][] }> => {
     const data = await file.arrayBuffer()
     const workbook = XLSX.read(data, { type: 'array' })
     const firstSheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[firstSheetName]
-    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false })
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, raw: false, defval: '' }) as any[][]
     const numbers: string[] = []
-    let startIndex = 0
 
+    // Check if first row is a header
+    let hasHeader = false
     if (jsonData.length > 0) {
       const firstRow = jsonData[0] as any[]
       if (firstRow && firstRow.length > colIndex) {
@@ -229,14 +236,17 @@ const ConversionTool = () => {
           const firstValue = String(cellValue).trim()
           const isNumeric = /^\d+(\.\d+)*$/.test(firstValue)
           if (firstValue && !isNumeric) {
-            startIndex = 1
+            hasHeader = true
           }
         }
       }
     }
 
-    for (let i = startIndex; i < jsonData.length; i++) {
+    // Extract numbers from data rows
+    const startRow = hasHeader ? 1 : 0
+    for (let i = startRow; i < jsonData.length; i++) {
       const row = jsonData[i] as any[]
+
       if (row && row.length > colIndex) {
         const cellValue = row[colIndex]
         if (cellValue !== undefined && cellValue !== null && cellValue !== '') {
@@ -248,7 +258,9 @@ const ConversionTool = () => {
       }
     }
 
-    return numbers
+    console.log('Excel parse:', { hasHeader, startRow, totalRows: jsonData.length, numbersFound: numbers.length, colIndex })
+
+    return { numbers, fullData: jsonData }
   }
 
   const handleConvert = async () => {
@@ -264,13 +276,18 @@ const ConversionTool = () => {
     try {
       const colIndex = columnLetterToIndex(columnLetter)
       let numbers: string[] = []
+      let fullData: any[][] = []
 
       const fileName = file.name.toLowerCase()
       if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-        numbers = await parseExcel(file, colIndex)
+        const result = await parseExcel(file, colIndex)
+        numbers = result.numbers
+        fullData = result.fullData
       } else {
         const text = await file.text()
-        numbers = parseCSV(text, colIndex)
+        const result = parseCSV(text, colIndex)
+        numbers = result.numbers
+        fullData = result.fullData
       }
 
       if (numbers.length === 0) {
@@ -278,6 +295,9 @@ const ConversionTool = () => {
         setBatchLoading(false)
         return
       }
+
+      // Store the original file data
+      setOriginalFileData(fullData)
 
       const response = await fetch(`${API_URL}/batch-convert`, {
         method: 'POST',
@@ -304,58 +324,130 @@ const ConversionTool = () => {
     }
   }
 
-  const handleExport = () => {
-    if (!batchResult || !file) return
+  const handleExport = async () => {
+    if (!batchResult || !file || !originalFileData) return
+
+    const colIndex = columnLetterToIndex(columnLetter)
 
     // Create array with converted numbers (or ?number? for failures)
     const convertedNumbers = batchResult.results.map(r =>
       r.status === 'success' ? r.output : `?${r.input}?`
     )
 
-    const originalFileName = file.name.replace(/\.[^/.]+$/, '')
-    const date = new Date()
-    const dateStr = date.toISOString().split('T')[0]
-    const timeStr = date.toTimeString().split(' ')[0].replace(/:/g, '-')
+    // Create modified data by replacing only the specified column
+    const modifiedData = originalFileData.map((row, index) => {
+      const newRow = [...row]
 
+      // Determine if this row should be modified
+      // Skip header row if it exists (check if first value in target column is not numeric)
+      const isHeaderRow = index === 0 && row[colIndex] && !/^\d+(\.\d+)*$/.test(String(row[colIndex]).trim())
+
+      if (!isHeaderRow && convertedNumbers.length > 0) {
+        // Calculate the data row index (accounting for potential header)
+        const firstDataValue = originalFileData[0]?.[colIndex]
+        const hasHeader = firstDataValue && !/^\d+(\.\d+)*$/.test(String(firstDataValue).trim())
+        const dataRowIndex = hasHeader ? index - 1 : index
+
+        if (dataRowIndex >= 0 && dataRowIndex < convertedNumbers.length) {
+          newRow[colIndex] = convertedNumbers[dataRowIndex]
+        }
+      }
+
+      return newRow
+    })
+
+    const originalFileName = file.name.replace(/\.[^/.]+$/, '')
     const inputFileName = file.name.toLowerCase()
     const isExcel = inputFileName.endsWith('.xlsx') || inputFileName.endsWith('.xls')
 
-    if (isExcel) {
-      const worksheet = XLSX.utils.aoa_to_sheet([
-        ['Konvertiert'],
-        ...convertedNumbers.map(num => [num])
-      ])
+    try {
+      if (isExcel) {
+        const worksheet = XLSX.utils.aoa_to_sheet(modifiedData)
 
-      // Apply red color to failed conversions (cells containing ?number?)
-      convertedNumbers.forEach((num, index) => {
-        const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 0 }) // +1 to skip header
-        if (num.startsWith('?')) {
-          if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {}
-          worksheet[cellAddress].s = {
-            font: { color: { rgb: "FF0000" } }
+        // Apply red color to failed conversions (cells containing ?number?)
+        modifiedData.forEach((row, rowIndex) => {
+          const cellValue = row[colIndex]
+          if (cellValue && String(cellValue).startsWith('?')) {
+            const cellAddress = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex })
+            if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {}
+            worksheet[cellAddress].s = {
+              font: { color: { rgb: "FF0000" } }
+            }
           }
+        })
+
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1')
+
+        const fileName = `${originalFileName}-${targetSystem}.xlsx`
+
+        // Use File System Access API if available
+        if ('showSaveFilePicker' in window) {
+          const options: any = {
+            suggestedName: fileName,
+            types: [{
+              description: 'Excel Files',
+              accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] }
+            }]
+          }
+
+          // Use the same directory as the input file if available
+          if (fileDirectoryHandle) {
+            options.startIn = fileDirectoryHandle
+          }
+
+          const fileHandle = await (window as any).showSaveFilePicker(options)
+
+          const writableStream = await fileHandle.createWritable()
+          const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx', cellStyles: true })
+          await writableStream.write(buffer)
+          await writableStream.close()
+        } else {
+          // Fallback to direct download
+          XLSX.writeFile(workbook, fileName, { cellStyles: true })
         }
-      })
+      } else {
+        // CSV export
+        const csvContent = modifiedData.map(row => row.join(';')).join('\n')
+        const fileName = `${originalFileName}-${targetSystem}.csv`
 
-      const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Konvertierung')
+        // Use File System Access API if available
+        if ('showSaveFilePicker' in window) {
+          const options: any = {
+            suggestedName: fileName,
+            types: [{
+              description: 'CSV Files',
+              accept: { 'text/csv': ['.csv'] }
+            }]
+          }
 
-      const fileName = `${originalFileName}-${targetSystem}-${dateStr}_${timeStr}.xlsx`
-      XLSX.writeFile(workbook, fileName, { cellStyles: true })
-    } else {
-      const csvContent = 'Konvertiert\n' + convertedNumbers.join('\n')
+          // Use the same directory as the input file if available
+          if (fileDirectoryHandle) {
+            options.startIn = fileDirectoryHandle
+          }
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-      const link = document.createElement('a')
-      const url = URL.createObjectURL(blob)
-      const fileName = `${originalFileName}-${targetSystem}-${dateStr}_${timeStr}.csv`
+          const fileHandle = await (window as any).showSaveFilePicker(options)
 
-      link.setAttribute('href', url)
-      link.setAttribute('download', fileName)
-      link.style.visibility = 'hidden'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
+          const writableStream = await fileHandle.createWritable()
+          await writableStream.write(csvContent)
+          await writableStream.close()
+        } else {
+          // Fallback to direct download
+          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+          const link = document.createElement('a')
+          const url = URL.createObjectURL(blob)
+
+          link.setAttribute('href', url)
+          link.setAttribute('download', fileName)
+          link.style.visibility = 'hidden'
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+        }
+      }
+    } catch (err) {
+      // User cancelled the save dialog or error occurred
+      console.log('Export cancelled or failed:', err)
     }
   }
 
@@ -427,8 +519,38 @@ const ConversionTool = () => {
           )}
 
           {result && result.found && result.ambiguous && result.results && (
-            <div className="not-found-msg">
-              <p>Bereinige Datenbasis ... {deletedCount > 0 ? deletedCount : ''}</p>
+            <div className="ambiguous-results">
+              {result.results.map((item, index) => (
+                <div key={index} className="result-compact">
+                  <div className="result-row">
+                    <span className="result-label">Eingabe:</span>
+                    <span className="result-value">{item.input_number}</span>
+                    <span className="result-badge">{getSystemLabel(item.input_type)}</span>
+                  </div>
+                  <div className="result-row">
+                    <span className="result-label">Entsprechung:</span>
+                    <span className="result-value">{item.corresponding_number}</span>
+                    <span className="result-badge">{getSystemLabel(item.corresponding_type)}</span>
+                  </div>
+                  {item.bez1 && (
+                    <div className="result-row">
+                      <span className="result-label">Bezeichnung 1:</span>
+                      <span className="result-value">{item.bez1}</span>
+                    </div>
+                  )}
+                  <div className="result-row">
+                    <span className="result-label">Bezeichnung 2:</span>
+                    <span className="result-value">{item.bez2 || '-'}</span>
+                  </div>
+                  <div className="result-row">
+                    <span className="result-label">Warengruppe:</span>
+                    <span className="result-value">
+                      {item.warengruppe || '-'}
+                      {item.warengruppe_description && ` - ${item.warengruppe_description}`}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -448,6 +570,7 @@ const ConversionTool = () => {
             <button onClick={handleBrowseClick} className="compact-button">
               {file ? file.name : 'Datei wählen'}
             </button>
+            <span className="batch-note">xls: nur 1.TAB</span>
           </div>
 
           <div className="batch-options">
@@ -485,7 +608,7 @@ const ConversionTool = () => {
                 <span className="failed-badge">
                   ✗ {batchResult.results.filter(r => r.status !== 'success').length}
                 </span>
-                <button onClick={handleExport} className="export-button-compact">Exportieren</button>
+                <button onClick={handleExport} className="export-button-compact">Speichern unter</button>
               </div>
 
               <div className="batch-results-list">
