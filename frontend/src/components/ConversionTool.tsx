@@ -264,12 +264,10 @@ const ConversionTool = () => {
   const handleExport = () => {
     if (!batchResult || !file) return
 
-    const successResults = batchResult.results.filter(r => r.status === 'success')
-
-    if (successResults.length === 0) {
-      setBatchError('Keine erfolgreichen Konvertierungen zum Exportieren')
-      return
-    }
+    // Create array with converted numbers (or ?number? for failures)
+    const convertedNumbers = batchResult.results.map(r =>
+      r.status === 'success' ? r.output : `?${r.input}?`
+    )
 
     const originalFileName = file.name.replace(/\.[^/.]+$/, '')
     const date = new Date()
@@ -281,8 +279,8 @@ const ConversionTool = () => {
 
     if (isExcel) {
       const worksheet = XLSX.utils.aoa_to_sheet([
-        ['Original', 'Konvertiert'],
-        ...successResults.map(r => [r.input, r.output])
+        ['Konvertiert'],
+        ...convertedNumbers.map(num => [num])
       ])
 
       const workbook = XLSX.utils.book_new()
@@ -291,9 +289,7 @@ const ConversionTool = () => {
       const fileName = `${originalFileName}-${targetSystem}-${dateStr}_${timeStr}.xlsx`
       XLSX.writeFile(workbook, fileName)
     } else {
-      const csvContent = 'Original;Konvertiert\n' + successResults
-        .map(r => `${r.input};${r.output}`)
-        .join('\n')
+      const csvContent = 'Konvertiert\n' + convertedNumbers.join('\n')
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
       const link = document.createElement('a')
@@ -458,19 +454,16 @@ const ConversionTool = () => {
                 <span className="failed-badge">
                   ✗ {batchResult.results.filter(r => r.status !== 'success').length}
                 </span>
-                {batchResult.all_convertible && (
-                  <button onClick={handleExport} className="export-button-compact">Exportieren</button>
-                )}
+                <button onClick={handleExport} className="export-button-compact">Exportieren</button>
               </div>
 
               <div className="batch-results-list">
                 {batchResult.results.map((item) => (
                   <div key={item.index} className={`batch-result-line status-${item.status}`}>
-                    <span className="batch-input">{item.input}</span>
-                    <span className="batch-arrow">→</span>
-                    <span className="batch-output">{item.output || '-'}</span>
-                    {item.status !== 'success' && (
-                      <span className="batch-status">[{item.status}]</span>
+                    {item.status === 'success' ? (
+                      <span className="batch-output">{item.output}</span>
+                    ) : (
+                      <span className="batch-output-error">?{item.input}?</span>
                     )}
                   </div>
                 ))}

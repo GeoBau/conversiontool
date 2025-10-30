@@ -284,6 +284,12 @@
   min-width: 100px;
 }
 
+.batch-output-error {
+  min-width: 100px;
+  color: #c62828;
+  font-weight: bold;
+}
+
 .batch-status {
   color: #c62828;
   font-size: 9px;
