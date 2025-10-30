@@ -43,7 +43,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const ConversionTool = () => {
   const [showHeadline, setShowHeadline] = useState(true)
-  const [searchNumber, setSearchNumber] = useState('')
+  const [searchNumber, setSearchNumber] = useState('415901309')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
