@@ -48,6 +48,7 @@ const ConversionTool = () => {
   const [result, setResult] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [cleaning, setCleaning] = useState(false)
+  const [deletedCount, setDeletedCount] = useState<number>(0)
 
   // Batch conversion states
   const [file, setFile] = useState<File | null>(null)
@@ -118,6 +119,7 @@ const ConversionTool = () => {
     const cleanDatabase = async () => {
       if (result && result.found && result.ambiguous && !cleaning) {
         setCleaning(true)
+        setDeletedCount(0)
         try {
           const response = await fetch(`${API_URL}/clean-duplicates`, {
             method: 'POST',
@@ -129,18 +131,22 @@ const ConversionTool = () => {
           if (response.ok) {
             const data = await response.json()
             console.log(`Cleaned database: removed ${data.duplicates_removed} duplicates`)
+            setDeletedCount(data.duplicates_removed || 0)
             // Re-search after cleaning
             setTimeout(() => {
               handleSearch()
               setCleaning(false)
-            }, 1000)
+              setDeletedCount(0)
+            }, 2000)
           } else {
             console.error('Failed to clean database')
             setCleaning(false)
+            setDeletedCount(0)
           }
         } catch (err) {
           console.error('Error cleaning database:', err)
           setCleaning(false)
+          setDeletedCount(0)
         }
       }
     }
@@ -421,7 +427,7 @@ const ConversionTool = () => {
 
           {result && result.found && result.ambiguous && result.results && (
             <div className="not-found-msg">
-              <p>Bereinige Datenbasis ...</p>
+              <p>Bereinige Datenbasis ... {deletedCount > 0 ? deletedCount : ''}</p>
             </div>
           )}
         </div>
