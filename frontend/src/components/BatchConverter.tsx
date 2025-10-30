@@ -33,11 +33,6 @@ const BatchConverter = () => {
     return letter.toUpperCase().charCodeAt(0) - 65
   }
 
-  // Convert index to column letter
-  const indexToColumnLetter = (index: number): string => {
-    return String.fromCharCode(65 + index)
-  }
-
   const handleFileSelect = (selectedFile: File) => {
     const fileName = selectedFile.name.toLowerCase()
     if (fileName.endsWith('.csv') || fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
