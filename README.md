@@ -1,6 +1,12 @@
 # Artikelnummer-Konverter
 
+[![GitHub](https://img.shields.io/badge/GitHub-conversiontool-blue?logo=github)](https://github.com/GeoBau/conversiontool)
+
 Ein Tool zur Konvertierung von Artikelnummern zwischen Bosch, Syskomp und Item Systemen.
+
+## Repository
+
+Dieses Projekt ist verfügbar auf GitHub: [https://github.com/GeoBau/conversiontool](https://github.com/GeoBau/conversiontool)
 
 ## Funktionen
 
