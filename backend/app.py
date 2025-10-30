@@ -427,6 +427,8 @@ def clean_duplicates():
         for idx, row in article_rows.iterrows():
             col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
             col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
+            bez1 = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ''
+            bez2 = str(row.iloc[3]).strip() if len(row) > 3 and not pd.isna(row.iloc[3]) else ''
 
             # Skip empty rows
             if col1 == '' and col2 == '':
@@ -437,7 +439,7 @@ def clean_duplicates():
             number_pair = (col1, col2)
             if number_pair in seen_numbers:
                 duplicates_removed += 1
-                print(f"Removing duplicate: {col1} - {col2}")
+                print(f"[DELETED] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2}")
                 continue
 
             seen_numbers.add(number_pair)
