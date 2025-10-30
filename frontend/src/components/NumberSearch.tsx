@@ -9,6 +9,7 @@ interface SearchResult {
   bez1: string
   bez2: string
   warengruppe: string
+  warengruppe_description: string
   row_index: number
 }
 
@@ -152,7 +153,10 @@ const NumberSearch = () => {
             </div>
             <div className="description-item">
               <label>Warengruppennummer:</label>
-              <p>{result.result.warengruppe || '-'}</p>
+              <p>
+                {result.result.warengruppe || '-'}
+                {result.result.warengruppe_description && ` - ${result.result.warengruppe_description}`}
+              </p>
             </div>
           </div>
         </div>
@@ -195,7 +199,10 @@ const NumberSearch = () => {
                   </div>
                   <div className="description-item">
                     <label>Warengruppennummer:</label>
-                    <p>{item.warengruppe || '-'}</p>
+                    <p>
+                      {item.warengruppe || '-'}
+                      {item.warengruppe_description && ` - ${item.warengruppe_description}`}
+                    </p>
                   </div>
                 </div>
               </div>

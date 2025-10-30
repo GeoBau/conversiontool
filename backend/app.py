@@ -16,6 +16,7 @@ CORS(app)
 
 # Global variable to store article data
 article_data = None
+warengruppe_mapping = {}
 
 # Define validation patterns
 PATTERNS = {
@@ -26,7 +27,7 @@ PATTERNS = {
 
 def load_data():
     """Load article data from CSV file."""
-    global article_data
+    global article_data, warengruppe_mapping
 
     csv_path = os.path.join(os.path.dirname(__file__), '..', 'Vorlagen', 'ArtNrn.csv')
 
@@ -57,6 +58,21 @@ def load_data():
             })
 
         print(f"Loaded {len(article_data)} article entries")
+
+        # Load Warengruppe descriptions
+        # Read the CSV again without header to get the Warengruppe mapping section
+        df_full = pd.read_csv(csv_path, sep=';', header=None, encoding='latin-1')
+
+        # Warengruppe mappings start at index 3643 (after the "Warengruppe" header at 3642)
+        for idx in range(3643, len(df_full)):
+            row = df_full.iloc[idx]
+            if len(row) >= 2:
+                code = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
+                description = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
+                if code and description:
+                    warengruppe_mapping[code] = description
+
+        print(f"Loaded {len(warengruppe_mapping)} Warengruppe descriptions")
         return True
 
     except Exception as e:
@@ -151,6 +167,9 @@ def search_number(search_term: str) -> List[Dict]:
                     input_type = detect_number_type(input_number)
                     corresponding_type = detect_number_type(corresponding_number)
 
+                # Get Warengruppe description
+                warengruppe_desc = warengruppe_mapping.get(entry['warengruppe'], '')
+
                 results.append({
                     'input_number': input_number,
                     'input_type': input_type,
@@ -159,6 +178,7 @@ def search_number(search_term: str) -> List[Dict]:
                     'bez1': entry['bez1'],
                     'bez2': entry['bez2'],
                     'warengruppe': entry['warengruppe'],
+                    'warengruppe_description': warengruppe_desc,
                     'row_index': entry['row_index']
                 })
                 break  # Found match, no need to check other variations
