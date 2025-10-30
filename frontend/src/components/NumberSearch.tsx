@@ -146,18 +146,14 @@ const NumberSearch = () => {
               <label>Bezeichnung 1:</label>
               <p>{result.result.bez1 || '-'}</p>
             </div>
-            {result.result.bez2 && result.result.bez2 !== '-' && (
-              <div className="description-item">
-                <label>Bezeichnung 2:</label>
-                <p>{result.result.bez2}</p>
-              </div>
-            )}
-            {result.result.warengruppe && result.result.warengruppe !== '--' && (
-              <div className="description-item">
-                <label>Warengruppe:</label>
-                <p>{result.result.warengruppe}</p>
-              </div>
-            )}
+            <div className="description-item">
+              <label>Bezeichnung 2:</label>
+              <p>{result.result.bez2 || '-'}</p>
+            </div>
+            <div className="description-item">
+              <label>Warengruppennummer:</label>
+              <p>{result.result.warengruppe || '-'}</p>
+            </div>
           </div>
         </div>
       )}
@@ -190,14 +186,17 @@ const NumberSearch = () => {
 
                 <div className="description-section">
                   <div className="description-item">
-                    <label>Bezeichnung:</label>
+                    <label>Bezeichnung 1:</label>
                     <p>{item.bez1 || '-'}</p>
                   </div>
-                  {item.bez2 && item.bez2 !== '-' && (
-                    <div className="description-item small">
-                      <p>{item.bez2}</p>
-                    </div>
-                  )}
+                  <div className="description-item">
+                    <label>Bezeichnung 2:</label>
+                    <p>{item.bez2 || '-'}</p>
+                  </div>
+                  <div className="description-item">
+                    <label>Warengruppennummer:</label>
+                    <p>{item.warengruppe || '-'}</p>
+                  </div>
                 </div>
               </div>
             ))}
