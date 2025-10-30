@@ -1,0 +1,14 @@
+product.php - nur wo?
+
+https://www.syskomp-group.com/de/kompatibilitaetsfinder
+
+Hallo Marlena,
+
+die Softwarebasis ist hier im GitHub:
+
+https://github.com/syskomp-gehmeyr/sg-web-numberconverter
+
+Die Datenbasis ist leider nicht so einfach anzupassen; die Daten sind in der Datei 127.0.0.1.6379.redisdata im Verzeichnis /htdocs/sg-web-numberconverter auf dem Webserver. Diese Daten sind eine Konvertierung aus dem Umwandlungs-Excel aus dem Vertriebsinnendienst.
+
+Beste Grüße,
+Peter
