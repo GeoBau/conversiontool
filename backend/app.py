@@ -402,8 +402,11 @@ def stats():
 
 @app.route('/api/clean-duplicates', methods=['POST'])
 def clean_duplicates():
-    """Clean duplicate entries from the CSV file."""
+    """Clean duplicate entries from the CSV file. Only processes rows matching search_term if provided."""
     try:
+        data = request.get_json()
+        search_term = data.get('search_term', None) if data else None
+
         csv_path = os.path.join(os.path.dirname(__file__), '..', 'Vorlagen', 'ArtNrn.csv')
 
         # Create backup
@@ -424,6 +427,13 @@ def clean_duplicates():
         duplicates_removed = 0
         rows_to_keep = []
 
+        # Generate search variations for Item numbers if search_term provided
+        search_variations = []
+        if search_term:
+            search_term = search_term.replace(' ', '').strip()
+            search_variations = normalize_item_number(search_term)
+            print(f"Cleaning duplicates for: {search_term} (variations: {search_variations})")
+
         for idx, row in article_rows.iterrows():
             col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
             col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
@@ -434,6 +444,19 @@ def clean_duplicates():
             if col1 == '' and col2 == '':
                 rows_to_keep.append(row)
                 continue
+
+            # If search_term provided, only process rows that match
+            if search_term:
+                matches_search = False
+                for variation in search_variations:
+                    if col1 == variation or col2 == variation:
+                        matches_search = True
+                        break
+
+                if not matches_search:
+                    # Keep row without checking for duplicates (not related to search)
+                    rows_to_keep.append(row)
+                    continue
 
             # Check if this number combination was already seen
             number_pair = (col1, col2)

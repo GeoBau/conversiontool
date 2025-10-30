@@ -126,11 +126,12 @@ const ConversionTool = () => {
             headers: {
               'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ search_term: searchNumber }),
           })
 
           if (response.ok) {
             const data = await response.json()
-            console.log(`Cleaned database: removed ${data.duplicates_removed} duplicates`)
+            console.log(`Cleaned database: removed ${data.duplicates_removed} duplicates for ${searchNumber}`)
             setDeletedCount(data.duplicates_removed || 0)
             // Re-search after cleaning
             setTimeout(() => {
