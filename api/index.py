@@ -19,6 +19,7 @@ CORS(app)
 # Global variable to store article data
 article_data = None
 warengruppe_mapping = {}
+article_index = {}  # Index: number -> list of row indices
 
 # Define validation patterns
 PATTERNS = {
@@ -28,8 +29,8 @@ PATTERNS = {
 }
 
 def load_data():
-    """Load article data from CSV file."""
-    global article_data, warengruppe_mapping
+    """Load article data from CSV file and build index."""
+    global article_data, warengruppe_mapping, article_index
 
     # For Vercel deployment, the CSV should be in the root Vorlagen directory
     # Try multiple possible paths
@@ -51,6 +52,7 @@ def load_data():
 
         # Create a clean dataset with the columns we need
         article_data = []
+        article_index = {}  # Reset index
 
         for idx, row in df.iterrows():
             col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
@@ -63,6 +65,7 @@ def load_data():
             if col1 == '' and col2 == '':
                 continue
 
+            entry_idx = len(article_data)
             article_data.append({
                 'number1': col1,
                 'number2': col2,
@@ -72,7 +75,18 @@ def load_data():
                 'row_index': idx + 2  # +2 for 1-indexed with header
             })
 
+            # Build index for fast lookup
+            if col1:
+                if col1 not in article_index:
+                    article_index[col1] = []
+                article_index[col1].append(entry_idx)
+            if col2:
+                if col2 not in article_index:
+                    article_index[col2] = []
+                article_index[col2].append(entry_idx)
+
         print(f"Loaded {len(article_data)} article entries from {csv_path}")
+        print(f"Built index with {len(article_index)} unique numbers")
 
         # Load Warengruppe descriptions
         # Read the CSV again without header to get the Warengruppe mapping section
@@ -400,47 +414,49 @@ def clean_duplicates():
 
         duplicates_removed = 0
 
-        # If search_term provided, use pandas to filter matching rows directly
+        # If search_term provided, use index for instant lookup (O(1) instead of O(n))
         if search_term:
             search_term = search_term.replace(' ', '').strip()
             search_variations = normalize_item_number(search_term)
             print(f"Cleaning duplicates for: {search_term} (variations: {search_variations})")
 
-            # Prepare columns as strings
-            col1_series = article_rows.iloc[:, 0].fillna('').astype(str).str.strip()
-            col2_series = article_rows.iloc[:, 1].fillna('').astype(str).str.strip()
-
-            # Create boolean mask for matching rows (vectorized operation - FAST!)
-            mask = pd.Series(False, index=article_rows.index)
+            # Use index to find matching row indices instantly - NO ITERATION THROUGH ALL ROWS!
+            matching_csv_rows = set()
             for variation in search_variations:
-                mask |= (col1_series == variation) | (col2_series == variation)
+                if variation in article_index:
+                    for entry_idx in article_index[variation]:
+                        # Convert entry index to CSV row index (entry.row_index gives us CSV line)
+                        csv_row_idx = article_data[entry_idx]['row_index'] - 2  # CSV row to df index
+                        matching_csv_rows.add(csv_row_idx)
 
-            # Extract only matching rows
-            matching_rows = article_rows[mask].copy()
-            print(f"Found {len(matching_rows)} rows matching search term")
+            print(f"Found {len(matching_csv_rows)} rows matching search term (instant index lookup)")
 
-            # Find duplicates within matching rows only
-            seen_numbers = set()
-            rows_to_delete = []
+            if matching_csv_rows:
+                # Extract only matching rows from dataframe
+                matching_rows = article_rows.loc[list(matching_csv_rows)]
 
-            for idx, row in matching_rows.iterrows():
-                col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
-                col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
-                bez1 = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ''
-                bez2 = str(row.iloc[3]).strip() if len(row) > 3 and not pd.isna(row.iloc[3]) else ''
+                # Find duplicates within matching rows only
+                seen_numbers = set()
+                rows_to_delete = []
 
-                number_pair = (col1, col2)
-                if number_pair in seen_numbers:
-                    rows_to_delete.append(idx)
-                    duplicates_removed += 1
-                    print(f"[DELETED] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2}")
-                else:
-                    seen_numbers.add(number_pair)
+                for idx, row in matching_rows.iterrows():
+                    col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
+                    col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
+                    bez1 = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ''
+                    bez2 = str(row.iloc[3]).strip() if len(row) > 3 and not pd.isna(row.iloc[3]) else ''
 
-            # Remove duplicate rows from original dataframe
-            if rows_to_delete:
-                article_rows = article_rows.drop(index=rows_to_delete)
-                print(f"Removed {duplicates_removed} duplicate rows")
+                    number_pair = (col1, col2)
+                    if number_pair in seen_numbers:
+                        rows_to_delete.append(idx)
+                        duplicates_removed += 1
+                        print(f"[DELETED] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2}")
+                    else:
+                        seen_numbers.add(number_pair)
+
+                # Remove duplicate rows from original dataframe
+                if rows_to_delete:
+                    article_rows = article_rows.drop(index=rows_to_delete)
+                    print(f"Removed {duplicates_removed} duplicate rows")
 
         rows_to_keep = article_rows
 
