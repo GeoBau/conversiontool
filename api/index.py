@@ -10,6 +10,8 @@ import re
 from typing import Optional, Dict, List, Tuple
 import os
 import sys
+import shutil
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -359,6 +361,85 @@ def stats():
         stats['column2'][type2] += 1
 
     return jsonify(stats)
+
+@app.route('/api/clean-duplicates', methods=['POST'])
+def clean_duplicates():
+    """Clean duplicate entries from the CSV file."""
+    try:
+        # Try multiple possible paths for Vercel
+        possible_paths = [
+            os.path.join(os.path.dirname(__file__), '..', 'Vorlagen', 'ArtNrn.csv'),
+            os.path.join(os.getcwd(), 'Vorlagen', 'ArtNrn.csv'),
+            'Vorlagen/ArtNrn.csv'
+        ]
+
+        csv_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                csv_path = path
+                break
+
+        if not csv_path:
+            return jsonify({'error': 'CSV file not found'}), 404
+
+        # Create backup
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        backup_path = csv_path.replace('.csv', f'_backup_{timestamp}.csv')
+        shutil.copy2(csv_path, backup_path)
+        print(f"Created backup: {backup_path}")
+
+        # Read the full CSV
+        df = pd.read_csv(csv_path, sep=';', header=0, encoding='latin-1')
+
+        # Store the article data rows (before Warengruppe section)
+        article_rows = df.iloc[:3641].copy()  # Up to row 3641 (before Warengruppe header at 3642)
+        warengruppe_section = df.iloc[3641:].copy()  # Warengruppe section and beyond
+
+        # Track duplicates
+        seen_numbers = set()
+        duplicates_removed = 0
+        rows_to_keep = []
+
+        for idx, row in article_rows.iterrows():
+            col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
+            col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
+
+            # Skip empty rows
+            if col1 == '' and col2 == '':
+                rows_to_keep.append(row)
+                continue
+
+            # Check if this number combination was already seen
+            number_pair = (col1, col2)
+            if number_pair in seen_numbers:
+                duplicates_removed += 1
+                print(f"Removing duplicate: {col1} - {col2}")
+                continue
+
+            seen_numbers.add(number_pair)
+            rows_to_keep.append(row)
+
+        # Reconstruct the dataframe
+        cleaned_articles = pd.DataFrame(rows_to_keep)
+        cleaned_df = pd.concat([cleaned_articles, warengruppe_section], ignore_index=True)
+
+        # Save cleaned CSV
+        cleaned_df.to_csv(csv_path, sep=';', index=False, encoding='latin-1')
+        print(f"Cleaned CSV saved. Removed {duplicates_removed} duplicates.")
+
+        # Reload data
+        load_data()
+
+        return jsonify({
+            'success': True,
+            'duplicates_removed': duplicates_removed,
+            'backup_file': os.path.basename(backup_path),
+            'total_entries': len(article_data) if article_data else 0
+        })
+
+    except Exception as e:
+        print(f"Error cleaning duplicates: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # Load data on module initialization
 print("Initializing API...")

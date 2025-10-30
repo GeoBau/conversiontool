@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import './ConversionTool.css'
 
@@ -47,6 +47,7 @@ const ConversionTool = () => {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [cleaning, setCleaning] = useState(false)
 
   // Batch conversion states
   const [file, setFile] = useState<File | null>(null)
@@ -111,6 +112,41 @@ const ConversionTool = () => {
       handleSearch()
     }
   }
+
+  // Automatically clean database when ambiguous results are detected
+  useEffect(() => {
+    const cleanDatabase = async () => {
+      if (result && result.found && result.ambiguous && !cleaning) {
+        setCleaning(true)
+        try {
+          const response = await fetch(`${API_URL}/clean-duplicates`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            console.log(`Cleaned database: removed ${data.duplicates_removed} duplicates`)
+            // Re-search after cleaning
+            setTimeout(() => {
+              handleSearch()
+              setCleaning(false)
+            }, 1000)
+          } else {
+            console.error('Failed to clean database')
+            setCleaning(false)
+          }
+        } catch (err) {
+          console.error('Error cleaning database:', err)
+          setCleaning(false)
+        }
+      }
+    }
+
+    cleanDatabase()
+  }, [result])
 
   // Batch conversion functions
   const columnLetterToIndex = (letter: string): number => {
@@ -385,7 +421,7 @@ const ConversionTool = () => {
 
           {result && result.found && result.ambiguous && result.results && (
             <div className="not-found-msg">
-              <p>Diese Artikelnummer hat mehrere Übereinstimmungen ({result.count}). Bitte kontaktieren Sie den Kundendienst für weitere Informationen.</p>
+              <p>Bereinige Datenbasis ...</p>
             </div>
           )}
         </div>
