@@ -460,6 +460,8 @@ const ConversionTool = () => {
               <div className="batch-results-list">
                 {batchResult.results.map((item) => (
                   <div key={item.index} className={`batch-result-line status-${item.status}`}>
+                    <span className="batch-input">{item.input}</span>
+                    <span className="batch-arrow">{'>'}</span>
                     {item.status === 'success' ? (
                       <span className="batch-output">{item.output}</span>
                     ) : (
