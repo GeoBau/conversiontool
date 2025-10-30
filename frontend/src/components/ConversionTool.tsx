@@ -283,11 +283,22 @@ const ConversionTool = () => {
         ...convertedNumbers.map(num => [num])
       ])
 
+      // Apply red color to failed conversions (cells containing ?number?)
+      convertedNumbers.forEach((num, index) => {
+        const cellAddress = XLSX.utils.encode_cell({ r: index + 1, c: 0 }) // +1 to skip header
+        if (num.startsWith('?')) {
+          if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {}
+          worksheet[cellAddress].s = {
+            font: { color: { rgb: "FF0000" } }
+          }
+        }
+      })
+
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Konvertierung')
 
       const fileName = `${originalFileName}-${targetSystem}-${dateStr}_${timeStr}.xlsx`
-      XLSX.writeFile(workbook, fileName)
+      XLSX.writeFile(workbook, fileName, { cellStyles: true })
     } else {
       const csvContent = 'Konvertiert\n' + convertedNumbers.join('\n')
 
