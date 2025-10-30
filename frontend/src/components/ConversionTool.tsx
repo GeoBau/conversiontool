@@ -10,6 +10,7 @@ interface SearchResult {
   bez1: string
   bez2: string
   warengruppe: string
+  warengruppe_description: string
   row_index: number
 }
 
@@ -357,10 +358,21 @@ const ConversionTool = () => {
               </div>
               {result.result.bez1 && (
                 <div className="result-row">
-                  <span className="result-label">Bezeichnung:</span>
+                  <span className="result-label">Bezeichnung 1:</span>
                   <span className="result-value">{result.result.bez1}</span>
                 </div>
               )}
+              <div className="result-row">
+                <span className="result-label">Bezeichnung 2:</span>
+                <span className="result-value">{result.result.bez2 || '-'}</span>
+              </div>
+              <div className="result-row">
+                <span className="result-label">Warengruppe:</span>
+                <span className="result-value">
+                  {result.result.warengruppe || '-'}
+                  {result.result.warengruppe_description && ` - ${result.result.warengruppe_description}`}
+                </span>
+              </div>
             </div>
           )}
 
@@ -379,6 +391,15 @@ const ConversionTool = () => {
                       <span className="result-desc">{item.bez1}</span>
                     </div>
                   )}
+                  <div className="result-row">
+                    <span className="result-desc">{item.bez2 || '-'}</span>
+                  </div>
+                  <div className="result-row">
+                    <span className="result-desc">
+                      {item.warengruppe || '-'}
+                      {item.warengruppe_description && ` - ${item.warengruppe_description}`}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>
