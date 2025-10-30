@@ -384,31 +384,8 @@ const ConversionTool = () => {
           )}
 
           {result && result.found && result.ambiguous && result.results && (
-            <div className="ambiguous-compact">
-              <p>Mehrere Übereinstimmungen ({result.count})</p>
-              {result.results.map((item, index) => (
-                <div key={index} className="result-compact">
-                  <div className="result-row">
-                    <span className="result-value">{item.input_number}</span>
-                    <span className="arrow-compact">→</span>
-                    <span className="result-value">{item.corresponding_number}</span>
-                  </div>
-                  {item.bez1 && (
-                    <div className="result-row">
-                      <span className="result-desc">{item.bez1}</span>
-                    </div>
-                  )}
-                  <div className="result-row">
-                    <span className="result-desc">{item.bez2 || '-'}</span>
-                  </div>
-                  <div className="result-row">
-                    <span className="result-desc">
-                      {item.warengruppe || '-'}
-                      {item.warengruppe_description && ` - ${item.warengruppe_description}`}
-                    </span>
-                  </div>
-                </div>
-              ))}
+            <div className="not-found-msg">
+              <p>Diese Artikelnummer hat mehrere Übereinstimmungen ({result.count}). Bitte kontaktieren Sie den Kundendienst für weitere Informationen.</p>
             </div>
           )}
         </div>
