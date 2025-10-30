@@ -422,36 +422,30 @@ def clean_duplicates():
         article_rows = df.iloc[:3641].copy()  # Up to row 3641 (before Warengruppe header at 3642)
         warengruppe_section = df.iloc[3641:].copy()  # Warengruppe section and beyond
 
-        # Generate search variations for Item numbers if search_term provided
-        search_variations = []
+        # If search_term provided, use pandas to filter matching rows directly
         if search_term:
             search_term = search_term.replace(' ', '').strip()
             search_variations = normalize_item_number(search_term)
             print(f"Cleaning duplicates for: {search_term} (variations: {search_variations})")
 
-        # If search_term provided, first identify all matching row indices
-        matching_indices = []
-        if search_term:
-            for idx, row in article_rows.iterrows():
-                col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
-                col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
+            # Prepare columns as strings
+            col1_series = article_rows.iloc[:, 0].fillna('').astype(str).str.strip()
+            col2_series = article_rows.iloc[:, 1].fillna('').astype(str).str.strip()
 
-                for variation in search_variations:
-                    if col1 == variation or col2 == variation:
-                        matching_indices.append(idx)
-                        break
+            # Create boolean mask for matching rows (vectorized operation - FAST!)
+            mask = pd.Series(False, index=article_rows.index)
+            for variation in search_variations:
+                mask |= (col1_series == variation) | (col2_series == variation)
 
-            print(f"Found {len(matching_indices)} rows matching search term")
+            # Extract only matching rows
+            matching_rows = article_rows[mask].copy()
+            print(f"Found {len(matching_rows)} rows matching search term")
 
-        # Track duplicates
-        seen_numbers = set()
-        duplicates_removed = 0
-        rows_to_delete = set()
+            # Find duplicates within matching rows only
+            seen_numbers = set()
+            rows_to_delete = []
 
-        # Only process matching rows for duplicate detection
-        if search_term and matching_indices:
-            for idx in matching_indices:
-                row = article_rows.loc[idx]
+            for idx, row in matching_rows.iterrows():
                 col1 = str(row.iloc[0]).strip() if not pd.isna(row.iloc[0]) else ''
                 col2 = str(row.iloc[1]).strip() if not pd.isna(row.iloc[1]) else ''
                 bez1 = str(row.iloc[2]).strip() if len(row) > 2 and not pd.isna(row.iloc[2]) else ''
@@ -459,16 +453,15 @@ def clean_duplicates():
 
                 number_pair = (col1, col2)
                 if number_pair in seen_numbers:
-                    duplicates_removed += 1
-                    rows_to_delete.add(idx)
+                    rows_to_delete.append(idx)
                     print(f"[DELETED] Row {idx+2}: {col1} | {col2} | {bez1} | {bez2}")
                 else:
                     seen_numbers.add(number_pair)
 
-        # Remove duplicate rows
-        if rows_to_delete:
-            article_rows = article_rows.drop(index=list(rows_to_delete))
-            print(f"Removed {len(rows_to_delete)} duplicate rows")
+            # Remove duplicate rows from original dataframe
+            if rows_to_delete:
+                article_rows = article_rows.drop(index=rows_to_delete)
+                print(f"Removed {len(rows_to_delete)} duplicate rows")
 
         rows_to_keep = article_rows
 
