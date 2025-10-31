@@ -57,6 +57,7 @@ const ConversionTool = () => {
   const [batchLoading, setBatchLoading] = useState(false)
   const [batchResult, setBatchResult] = useState<BatchResponse | null>(null)
   const [batchError, setBatchError] = useState<string | null>(null)
+  const [showInfoModal, setShowInfoModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const getSystemLabel = (type: string) => {
@@ -119,14 +120,91 @@ const ConversionTool = () => {
     return letter.toUpperCase().charCodeAt(0) - 65
   }
 
-  const handleFileSelect = (selectedFile: File) => {
-    const fileName = selectedFile.name.toLowerCase()
-    if (fileName.endsWith('.csv') || fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-      setFile(selectedFile)
-      setBatchError(null)
-    } else {
-      setBatchError('Bitte wählen Sie eine CSV- oder Excel-Datei aus')
+  const escapeCsvValue = (value: any): string => {
+    // Prevent CSV injection by escaping formulas
+    const stringValue = String(value)
+
+    // Check if value starts with dangerous characters
+    if (stringValue.match(/^[=+\-@\t\r]/)) {
+      // Prepend with single quote to prevent formula execution
+      return `'${stringValue}`
     }
+
+    return stringValue
+  }
+
+  const sanitizeFilename = (filename: string): string => {
+    // Remove path separators and dangerous characters
+    return filename
+      .replace(/[<>:"|?*\x00-\x1f]/g, '') // Remove dangerous characters
+      .replace(/^\.+/, '') // Remove leading dots
+      .replace(/\.\./g, '.') // Replace double dots
+      .replace(/\\/g, '') // Remove backslashes
+      .replace(/\//g, '') // Remove forward slashes
+      .trim()
+      .slice(0, 255) // Limit length
+  }
+
+  const verifyMimeType = async (file: File): Promise<boolean> => {
+    const validMimeTypes = [
+      'text/csv',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // fallback for some systems
+    ]
+
+    // Check browser-reported MIME type
+    if (!validMimeTypes.includes(file.type) && file.type !== '') {
+      return false
+    }
+
+    // Read file signature (magic bytes) for additional verification
+    try {
+      const buffer = await file.slice(0, 4).arrayBuffer()
+      const bytes = new Uint8Array(buffer)
+
+      // Check for ZIP signature (XLSX files are ZIP archives)
+      // Magic bytes: 50 4B 03 04 or 50 4B 05 06 or 50 4B 07 08
+      if (bytes[0] === 0x50 && bytes[1] === 0x4B) {
+        return true // XLSX file
+      }
+
+      // CSV files don't have magic bytes, so we accept if extension matches
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        return true
+      }
+
+      return false
+    } catch {
+      // If we can't read the file, fall back to extension check
+      return true
+    }
+  }
+
+  const handleFileSelect = async (selectedFile: File) => {
+    const fileName = selectedFile.name.toLowerCase()
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
+
+    // Check file size
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setBatchError(`Datei ist zu groß. Maximum: 10MB (Ihre Datei: ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB)`)
+      return
+    }
+
+    // Check file extension
+    if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
+      setBatchError('Bitte wählen Sie eine CSV- oder XLSX-Datei aus')
+      return
+    }
+
+    // Verify MIME type and file signature
+    const isValidMime = await verifyMimeType(selectedFile)
+    if (!isValidMime) {
+      setBatchError('Ungültiger Dateityp. Die Datei scheint nicht dem angegebenen Format zu entsprechen.')
+      return
+    }
+
+    setFile(selectedFile)
+    setBatchError(null)
   }
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,8 +223,7 @@ const ConversionTool = () => {
             description: 'Excel and CSV Files',
             accept: {
               'text/csv': ['.csv'],
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-              'application/vnd.ms-excel': ['.xls']
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx']
             }
           }],
           multiple: false
@@ -279,7 +356,7 @@ const ConversionTool = () => {
       let fullData: any[][] = []
 
       const fileName = file.name.toLowerCase()
-      if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      if (fileName.endsWith('.xlsx')) {
         const result = await parseExcel(file, colIndex)
         numbers = result.numbers
         fullData = result.fullData
@@ -356,9 +433,9 @@ const ConversionTool = () => {
       return newRow
     })
 
-    const originalFileName = file.name.replace(/\.[^/.]+$/, '')
+    const originalFileName = sanitizeFilename(file.name).replace(/\.[^/.]+$/, '')
     const inputFileName = file.name.toLowerCase()
-    const isExcel = inputFileName.endsWith('.xlsx') || inputFileName.endsWith('.xls')
+    const isExcel = inputFileName.endsWith('.xlsx')
 
     try {
       if (isExcel) {
@@ -407,8 +484,10 @@ const ConversionTool = () => {
           XLSX.writeFile(workbook, fileName, { cellStyles: true })
         }
       } else {
-        // CSV export
-        const csvContent = modifiedData.map(row => row.join(';')).join('\n')
+        // CSV export - escape values to prevent CSV injection
+        const csvContent = modifiedData.map(row =>
+          row.map(cell => escapeCsvValue(cell)).join(';')
+        ).join('\n')
         const fileName = `${originalFileName}-${targetSystem}.csv`
 
         // Use File System Access API if available
@@ -433,7 +512,14 @@ const ConversionTool = () => {
           await writableStream.close()
         } else {
           // Fallback to direct download
-          const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+          // Escape CSV values to prevent injection
+          const escapedContent = csvContent.split('\n').map((line, idx) => {
+            if (idx === 0) return line // Keep header unchanged
+            const values = line.split(';')
+            return values.map(v => escapeCsvValue(v)).join(';')
+          }).join('\n')
+
+          const blob = new Blob([escapedContent], { type: 'text/csv;charset=utf-8;' })
           const link = document.createElement('a')
           const url = URL.createObjectURL(blob)
 
@@ -563,14 +649,20 @@ const ConversionTool = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.xlsx,.xls"
+              accept=".csv,.xlsx"
               onChange={handleFileInput}
               style={{ display: 'none' }}
             />
             <button onClick={handleBrowseClick} className="compact-button">
-              {file ? file.name : 'Datei wählen'}
+              {file ? sanitizeFilename(file.name) : 'Datei wählen (csv, xlsx)'}
             </button>
-            <span className="batch-note">xls: nur 1.TAB</span>
+            <button
+              onClick={() => setShowInfoModal(true)}
+              className="info-button"
+              title="Informationen"
+            >
+              ⓘ
+            </button>
           </div>
 
           <div className="batch-options">
@@ -628,6 +720,27 @@ const ConversionTool = () => {
           )}
         </div>
       </div>
+
+      {/* Info Modal */}
+      {showInfoModal && (
+        <div className="modal-overlay" onClick={() => setShowInfoModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Dateiinformationen</h3>
+              <button className="modal-close" onClick={() => setShowInfoModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>Die Dateien sind begrenzt auf 10MB.</p>
+              <p><strong>xlsx-Dateien:</strong></p>
+              <p>Die Konvertierung kann nur in der angegebenen Spalte ersten Tab des Files (üblicherweise "Tabelle1" bezeichnet) erfolgen.</p>
+              <p>Bei 'Konvertieren' werden die möglichen neuen Artnr im Vergleich zu den vorhandenen angezeigt. 
+                Es erfolgt keine Speicherung der Daten, es ist nur eine Anzeige.</p>
+              <p>Bei 'Speichern unter' legen sie die Datei fest, die die geänderten Artikelnummern enthält.
+                Die Formatierung der Felder werden auf das Standardformat zurückgesetzt.</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

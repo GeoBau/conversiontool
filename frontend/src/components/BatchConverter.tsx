@@ -33,14 +33,91 @@ const BatchConverter = () => {
     return letter.toUpperCase().charCodeAt(0) - 65
   }
 
-  const handleFileSelect = (selectedFile: File) => {
-    const fileName = selectedFile.name.toLowerCase()
-    if (fileName.endsWith('.csv') || fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
-      setFile(selectedFile)
-      setError(null)
-    } else {
-      setError('Bitte wählen Sie eine CSV- oder Excel-Datei (.csv, .xlsx) aus')
+  const escapeCsvValue = (value: string): string => {
+    // Prevent CSV injection by escaping formulas
+    const stringValue = String(value)
+
+    // Check if value starts with dangerous characters
+    if (stringValue.match(/^[=+\-@\t\r]/)) {
+      // Prepend with single quote to prevent formula execution
+      return `'${stringValue}`
     }
+
+    return stringValue
+  }
+
+  const sanitizeFilename = (filename: string): string => {
+    // Remove path separators and dangerous characters
+    return filename
+      .replace(/[<>:"|?*\x00-\x1f]/g, '') // Remove dangerous characters
+      .replace(/^\.+/, '') // Remove leading dots
+      .replace(/\.\./g, '.') // Replace double dots
+      .replace(/\\/g, '') // Remove backslashes
+      .replace(/\//g, '') // Remove forward slashes
+      .trim()
+      .slice(0, 255) // Limit length
+  }
+
+  const verifyMimeType = async (file: File): Promise<boolean> => {
+    const validMimeTypes = [
+      'text/csv',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel' // fallback for some systems
+    ]
+
+    // Check browser-reported MIME type
+    if (!validMimeTypes.includes(file.type) && file.type !== '') {
+      return false
+    }
+
+    // Read file signature (magic bytes) for additional verification
+    try {
+      const buffer = await file.slice(0, 4).arrayBuffer()
+      const bytes = new Uint8Array(buffer)
+
+      // Check for ZIP signature (XLSX files are ZIP archives)
+      // Magic bytes: 50 4B 03 04 or 50 4B 05 06 or 50 4B 07 08
+      if (bytes[0] === 0x50 && bytes[1] === 0x4B) {
+        return true // XLSX file
+      }
+
+      // CSV files don't have magic bytes, so we accept if extension matches
+      if (file.name.toLowerCase().endsWith('.csv')) {
+        return true
+      }
+
+      return false
+    } catch {
+      // If we can't read the file, fall back to extension check
+      return true
+    }
+  }
+
+  const handleFileSelect = async (selectedFile: File) => {
+    const fileName = selectedFile.name.toLowerCase()
+    const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB in bytes
+
+    // Check file size
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      setError(`Datei ist zu groß. Maximum: 10MB (Ihre Datei: ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB)`)
+      return
+    }
+
+    // Check file extension
+    if (!fileName.endsWith('.csv') && !fileName.endsWith('.xlsx')) {
+      setError('Bitte wählen Sie eine CSV- oder XLSX-Datei aus')
+      return
+    }
+
+    // Verify MIME type and file signature
+    const isValidMime = await verifyMimeType(selectedFile)
+    if (!isValidMime) {
+      setError('Ungültiger Dateityp. Die Datei scheint nicht dem angegebenen Format zu entsprechen.')
+      return
+    }
+
+    setFile(selectedFile)
+    setError(null)
   }
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -180,7 +257,7 @@ const BatchConverter = () => {
       // Detect file type and parse accordingly
       const fileName = file.name.toLowerCase()
       console.log('[handleConvert] File name:', fileName)
-      if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+      if (fileName.endsWith('.xlsx')) {
         console.log('[handleConvert] Parsing as Excel')
         numbers = await parseExcel(file, colIndex)
       } else {
@@ -234,14 +311,14 @@ const BatchConverter = () => {
     }
 
     // Create filename with original filename, target system, and date
-    const originalFileName = file.name.replace(/\.[^/.]+$/, '')
+    const originalFileName = sanitizeFilename(file.name).replace(/\.[^/.]+$/, '')
     const date = new Date()
     const dateStr = date.toISOString().split('T')[0] // YYYY-MM-DD
     const timeStr = date.toTimeString().split(' ')[0].replace(/:/g, '-') // HH-MM-SS
 
     // Detect original file format
     const inputFileName = file.name.toLowerCase()
-    const isExcel = inputFileName.endsWith('.xlsx') || inputFileName.endsWith('.xls')
+    const isExcel = inputFileName.endsWith('.xlsx')
 
     if (isExcel) {
       // Export as Excel
@@ -258,7 +335,7 @@ const BatchConverter = () => {
     } else {
       // Export as CSV
       const csvContent = 'Original;Konvertiert\n' + successResults
-        .map(r => `${r.input};${r.output}`)
+        .map(r => `${escapeCsvValue(r.input)};${escapeCsvValue(r.output || '')}`)
         .join('\n')
 
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
@@ -318,7 +395,7 @@ const BatchConverter = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv,.xlsx,.xls"
+            accept=".csv,.xlsx"
             onChange={handleFileInput}
             style={{ display: 'none' }}
           />
@@ -329,7 +406,7 @@ const BatchConverter = () => {
                 <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
                 <polyline points="13 2 13 9 20 9" />
               </svg>
-              <p className="file-name">{file.name}</p>
+              <p className="file-name">{sanitizeFilename(file.name)}</p>
               <p className="file-size">{(file.size / 1024).toFixed(2)} KB</p>
             </div>
           ) : (
@@ -341,7 +418,7 @@ const BatchConverter = () => {
               </svg>
               <p>CSV- oder Excel-Datei hier ablegen oder klicken zum Durchsuchen</p>
               <p style={{ fontSize: '0.85rem', color: '#94a3b8', marginTop: '0.5rem' }}>
-                Unterstützte Formate: .csv, .xlsx, .xls
+                Unterstützte Formate: .csv, .xlsx
               </p>
             </div>
           )}

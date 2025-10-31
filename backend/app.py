@@ -5,6 +5,8 @@ Supports conversion between Bosch, Syskomp, and Item number systems
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import pandas as pd
 import re
 from typing import Optional, Dict, List, Tuple
@@ -15,6 +17,14 @@ from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
+
+# Configure rate limiting
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
 
 # Global variable to store article data
 article_data = None
@@ -247,6 +257,7 @@ def health_check():
     })
 
 @app.route('/api/search', methods=['POST'])
+@limiter.limit("30 per minute")
 def search():
     """
     Search for article number.
@@ -324,6 +335,7 @@ def validate():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/batch-convert', methods=['POST'])
+@limiter.limit("10 per minute")
 def batch_convert():
     """
     Convert a batch of article numbers.
