@@ -732,10 +732,11 @@ const ConversionTool = () => {
             <div className="modal-body">
               <p>Die Dateien sind begrenzt auf 10MB.</p>
               <p><strong>xlsx-Dateien:</strong></p>
-              <p>Die Konvertierung kann nur in der angegebenen Spalte ersten Tab des Files (üblicherweise "Tabelle1" bezeichnet) erfolgen.</p>
+              <p>Die Konvertierung kann nur in der angegebenen Spalte ersten Tab des Files (üblicherweise "Tabelle1" bezeichnet) erfolgen. </p>
               <p>Bei 'Konvertieren' werden die möglichen neuen Artnr im Vergleich zu den vorhandenen angezeigt. 
-                Es erfolgt keine Speicherung der Daten, es ist nur eine Anzeige.</p>
-              <p>Bei 'Speichern unter' legen sie die Datei fest, die die geänderten Artikelnummern enthält.
+                Es erfolgt keine Speicherung der Daten, es ist nur eine Anzeige.
+                Die Datei bleibt unverändert.</p>
+              <p>Bei 'Speichern unter' legen sie den Dateinamen fest, unter dem die Datei mit den geänderten Artikelnummern gespeichert wird.
                 Die Formatierung der Felder werden auf das Standardformat zurückgesetzt.
                 Macros, Formeln werden nicht ausgeführt und gehen verloren, nur das Ergebnis bleibt im Feld erhalten
                 </p>
