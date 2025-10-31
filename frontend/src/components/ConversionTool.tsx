@@ -736,7 +736,9 @@ const ConversionTool = () => {
               <p>Bei 'Konvertieren' werden die möglichen neuen Artnr im Vergleich zu den vorhandenen angezeigt. 
                 Es erfolgt keine Speicherung der Daten, es ist nur eine Anzeige.</p>
               <p>Bei 'Speichern unter' legen sie die Datei fest, die die geänderten Artikelnummern enthält.
-                Die Formatierung der Felder werden auf das Standardformat zurückgesetzt.</p>
+                Die Formatierung der Felder werden auf das Standardformat zurückgesetzt.
+                Macros, Formeln werden nicht ausgeführt und gehen verloren, nur das Ergebnis bleibt im Feld erhalten
+                </p>
             </div>
           </div>
         </div>
