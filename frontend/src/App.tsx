@@ -1,10 +1,10 @@
 import './App.css'
-import ConversionTool from './components/ConversionTool'
+import PortfolioConversion from './components/PortfolioConversion'
 
 function App() {
   return (
     <div className="app">
-      <ConversionTool />
+      <PortfolioConversion />
     </div>
   )
 }

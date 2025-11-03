@@ -83,7 +83,9 @@ old/
 
 # Documentation that's been moved
 PROMPTS/
-
+ALVARIS_CATALOG/
+ASK_CATALOG/
 # System files
 Thumbs.db
 .DS_Store
+

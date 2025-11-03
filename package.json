@@ -1,4 +1,22 @@
 {
+  "name": "nummern-umrechnung",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "build": "npm run build --prefix frontend",
+    "preview": "npm run preview --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "install:frontend": "cd frontend && npm install",
+    "install:all": "npm install && npm run install:frontend",
+    "test:xlsx": "node test_xlsx_parse.js",
+    "analyze": "python analyze_data.py",
+    "clean:csv": "python clean_artnr.py",
+    "test:clean": "python test_clean_artnr.py",
+    "vercel:build": "npm run build",
+    "vercel:deploy": "vercel",
+    "vercel:deploy:prod": "vercel --prod"
+  },
   "dependencies": {
     "xlsx": "^0.18.5"
   }
