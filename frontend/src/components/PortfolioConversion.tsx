@@ -629,8 +629,11 @@ const PortfolioConversion = () => {
                   {match.image && (
                     <div className={`result-image ${match.image.crop_top_70 ? 'crop-alvaris' : ''}`}>
                       <img
-                        src={`${API_URL}/image/${match.image.type}/${match.image.artnr}`}
+                        src={`/images/${match.image.type}/${match.image.artnr}.png`}
                         alt="Produkt"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none'
+                        }}
                       />
                     </div>
                   )}
