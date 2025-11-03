@@ -54,17 +54,6 @@ interface StatsData {
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
-const COLUMN_OPTIONS = [
-  { value: 'A', label: 'A: Syskomp neu' },
-  { value: 'B', label: 'B: Syskomp alt' },
-  { value: 'C', label: 'C: Beschreibung' },
-  { value: 'D', label: 'D: Item' },
-  { value: 'E', label: 'E: Bosch' },
-  { value: 'F', label: 'F: Alvaris Artnr' },
-  { value: 'G', label: 'G: Alvaris Matnr' },
-  { value: 'H', label: 'H: ASK' },
-]
-
 const PortfolioConversion = () => {
   const [showHeadline, setShowHeadline] = useState(true)
   const [searchNumber, setSearchNumber] = useState('403538558')
