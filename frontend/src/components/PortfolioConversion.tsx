@@ -552,13 +552,31 @@ const PortfolioConversion = () => {
                     {match.syskomp_neu && match.syskomp_neu !== '-' && (
                       <div className="result-row highlight">
                         <span className="result-label">Syskomp neu:</span>
-                        <span className="result-value">{match.syskomp_neu}</span>
+                        <span className="result-value">
+                          <a
+                            href={`https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_neu)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="number-link"
+                          >
+                            {match.syskomp_neu}
+                          </a>
+                        </span>
                       </div>
                     )}
                     {match.syskomp_alt && match.syskomp_alt !== '-' && (
                       <div className="result-row highlight">
                         <span className="result-label">Syskomp alt:</span>
-                        <span className="result-value">{match.syskomp_alt}</span>
+                        <span className="result-value">
+                          <a
+                            href={`https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_alt)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="number-link"
+                          >
+                            {match.syskomp_alt}
+                          </a>
+                        </span>
                       </div>
                     )}
                     {match.item && match.item !== '-' && (
