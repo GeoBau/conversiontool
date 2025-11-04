@@ -46,6 +46,7 @@ const CatalogMapper = () => {
   const [minSimilarity, setMinSimilarity] = useState(0)
   const [filterText, setFilterText] = useState('')
   const [matchLoading, setMatchLoading] = useState(false)
+  const [gotoInput, setGotoInput] = useState('')
 
   // Fetch available catalogs on mount
   useEffect(() => {
@@ -193,6 +194,17 @@ const CatalogMapper = () => {
     handleNext()
   }
 
+  const handleGoto = () => {
+    const targetNumber = parseInt(gotoInput)
+    if (!isNaN(targetNumber) && targetNumber >= 1 && targetNumber <= catalogProducts.length) {
+      const targetIndex = targetNumber - 1
+      setCurrentIndex(targetIndex)
+      setSelectedMatch('')
+      findMatches(catalogProducts[targetIndex].Beschreibung)
+      setGotoInput('')
+    }
+  }
+
   const currentProduct = catalogProducts[currentIndex]
   const catalogInfo = catalogs.find(c => c.path === selectedCatalog)
   const catalogName = catalogInfo?.name || ''
@@ -246,8 +258,27 @@ const CatalogMapper = () => {
       {catalogProducts.length > 0 && currentProduct && (
         <div style={{ width: '100%', padding: '0 15px', boxSizing: 'border-box' }}>
           {/* Progress */}
-          <div style={{ marginBottom: '20px', fontSize: '14px', color: '#666', textAlign: 'center' }}>
-            Produkt {currentIndex + 1} / {catalogProducts.length} ({catalogName})
+          <div style={{ marginBottom: '8px', fontSize: '14px', color: '#666', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+            <span>Produkt {currentIndex + 1} / {catalogProducts.length} ({catalogName})</span>
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+              <input
+                type="number"
+                value={gotoInput}
+                onChange={(e) => setGotoInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleGoto()}
+                placeholder="#"
+                min="1"
+                max={catalogProducts.length}
+                style={{ width: '50px', padding: '2px 4px', fontSize: '11px', border: '1px solid #ccc', borderRadius: '2px' }}
+              />
+              <button
+                onClick={handleGoto}
+                disabled={!gotoInput}
+                style={{ padding: '2px 8px', fontSize: '10px', border: '1px solid #409f95', backgroundColor: '#409f95', color: 'white', borderRadius: '2px', cursor: 'pointer' }}
+              >
+                Goto
+              </button>
+            </div>
           </div>
 
           {/* Filters Block - Above columns */}

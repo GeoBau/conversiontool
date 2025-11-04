@@ -90,6 +90,8 @@ def find_image(artnr, source_type):
     # Define possible image directories
     if source_type == 'alvaris':
         possible_dirs = [
+            os.path.join(base_dir, "ALVARIS_CATALOG", "alvaris-a-images"),
+            os.path.join(base_dir, "ALVARIS_CATALOG", "alvaris-b-images"),
             os.path.join(base_dir, "ALVARIS_CATALOG", "alvaris-images"),
             os.path.join(base_dir, "ALVARIS_CATALOG", "alvaris-item-images"),
             os.path.join(base_dir, "ALVARIS_CATALOG", "alvaris-bosch-images"),
@@ -541,15 +543,26 @@ def load_catalog():
         parent_dir = os.path.dirname(catalog_path)
         image_dir = os.path.join(parent_dir, f"{catalog_name}-images")
 
-        # Check which article numbers already exist in Portfolio CSV (column H for ASK)
+        # Determine catalog type and check appropriate columns
+        is_alvaris = 'ALVARIS' in parent_dir.upper() or 'alvaris' in catalog_name.lower()
+
+        # Check which article numbers already exist in Portfolio CSV
         existing_numbers = set()
         portfolio_path = os.path.join(os.path.dirname(__file__), '..', 'Portfolio_Syskomp_pA.csv')
         if os.path.exists(portfolio_path):
             with open(portfolio_path, 'r', encoding='utf-8') as pf:
                 portfolio_reader = csv.reader(pf, delimiter=';')
                 for row in portfolio_reader:
-                    if len(row) > 7 and row[7]:  # Column H (index 7)
-                        existing_numbers.add(row[7].strip())
+                    if is_alvaris:
+                        # Alvaris: Check column F (AlvarisArtnr, index 5) and G (AlvarisMatnr, index 6)
+                        if len(row) > 5 and row[5]:
+                            existing_numbers.add(row[5].strip())
+                        if len(row) > 6 and row[6]:
+                            existing_numbers.add(row[6].strip())
+                    else:
+                        # ASK: Check column H (index 7)
+                        if len(row) > 7 and row[7]:
+                            existing_numbers.add(row[7].strip())
 
         # Mark products that already exist
         for product in products:

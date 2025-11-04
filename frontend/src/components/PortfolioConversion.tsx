@@ -59,6 +59,7 @@ const API_URL = import.meta.env.VITE_API_URL || '/api'
 const PortfolioConversion = () => {
   const [showHeadline, setShowHeadline] = useState(true)
   const [currentTab, setCurrentTab] = useState<'search' | 'batch' | 'mapper'>('search')
+  const [mapperKey, setMapperKey] = useState(0)
   const [searchNumber, setSearchNumber] = useState('140000067')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<SearchResult | null>(null)
@@ -570,7 +571,10 @@ const PortfolioConversion = () => {
           Batch
         </button>
         <button
-          onClick={() => setCurrentTab('mapper')}
+          onClick={() => {
+            setCurrentTab('mapper')
+            setMapperKey(prev => prev + 1)
+          }}
           style={{
             padding: '10px 20px',
             background: currentTab === 'mapper' ? '#007bff' : '#f0f0f0',
@@ -811,7 +815,7 @@ const PortfolioConversion = () => {
       )}
 
       {currentTab === 'mapper' && (
-        <CatalogMapper />
+        <CatalogMapper key={mapperKey} />
       )}
 
       {/* Info Modal */}
