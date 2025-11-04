@@ -42,6 +42,7 @@ const CatalogMapper = () => {
   const [selectedMatch, setSelectedMatch] = useState<string>('')
   const [filterType, setFilterType] = useState<'all' | 'item' | 'bosch'>('all')
   const [minSimilarity, setMinSimilarity] = useState(0)
+  const [filterText, setFilterText] = useState('')
   const [matchLoading, setMatchLoading] = useState(false)
 
   // Fetch available catalogs on mount
@@ -192,35 +193,44 @@ const CatalogMapper = () => {
   const currentProduct = catalogProducts[currentIndex]
   const catalogName = catalogs.find(c => c.path === selectedCatalog)?.name || ''
 
+  // Client-side text filtering of matches
+  const filteredMatches = matches.filter(match => {
+    if (!filterText.trim()) return true
+    const searchText = filterText.toLowerCase()
+    return match.description.toLowerCase().includes(searchText)
+  })
+
   return (
     <div className="catalog-mapper">
       <h2>Katalog Mapper</h2>
 
-      {/* Catalog Selection */}
-      <div className="mapper-section">
-        <h3>Katalog auswählen</h3>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <select
-            value={selectedCatalog}
-            onChange={(e) => setSelectedCatalog(e.target.value)}
-            style={{ flex: 1, padding: '8px' }}
-          >
-            <option value="">-- Katalog wählen --</option>
-            {catalogs.map((cat) => (
-              <option key={cat.path} value={cat.path}>
-                {cat.name} ({cat.type})
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={handleLoadCatalog}
-            disabled={loading || !selectedCatalog}
-            className="action-button"
-          >
-            {loading ? 'Laden...' : 'Laden'}
-          </button>
+      {/* Catalog Selection - hide when products are loaded */}
+      {catalogProducts.length === 0 && (
+        <div className="mapper-section">
+          <h3>Katalog auswählen</h3>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <select
+              value={selectedCatalog}
+              onChange={(e) => setSelectedCatalog(e.target.value)}
+              style={{ flex: 1, padding: '8px' }}
+            >
+              <option value="">-- Katalog wählen --</option>
+              {catalogs.map((cat) => (
+                <option key={cat.path} value={cat.path}>
+                  {cat.name} ({cat.type})
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={handleLoadCatalog}
+              disabled={loading || !selectedCatalog}
+              className="action-button"
+            >
+              {loading ? 'Laden...' : 'Laden'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {error && (
         <div style={{ color: 'red', padding: '10px', marginTop: '10px' }}>
@@ -229,39 +239,59 @@ const CatalogMapper = () => {
       )}
 
       {catalogProducts.length > 0 && currentProduct && (
-        <>
+        <div style={{ width: '100%', margin: '0 auto', padding: '0 15px', boxSizing: 'border-box' }}>
           {/* Progress */}
-          <div className="mapper-progress">
+          <div className="mapper-progress" style={{ marginBottom: '20px', fontSize: '14px', color: '#666' }}>
             Produkt {currentIndex + 1} / {catalogProducts.length} ({catalogName})
           </div>
 
-          {/* Current Product Display */}
-          <div className="mapper-section" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '20px' }}>
-            {/* Left: Product Info */}
-            <div>
-              <h3>Katalog-Produkt</h3>
-              <div style={{ marginBottom: '10px' }}>
+          {/* Two Column Layout - Responsive */}
+          <div className="mapper-columns">
+            {/* LEFT COLUMN: Product Info */}
+            <div style={{ border: '1px solid #ccc', padding: '20px', borderRadius: '4px' }}>
+              <h3 style={{ marginTop: 0 }}>Katalog-Produkt</h3>
+
+              <div style={{ marginBottom: '15px' }}>
                 <strong>Art. Nr:</strong> {currentProduct.Artikelnummer}
               </div>
-              <div style={{ marginBottom: '10px' }}>
+
+              <div style={{ marginBottom: '15px' }}>
                 <strong>Beschreibung:</strong><br />
-                {currentProduct.Beschreibung}
+                {currentProduct.Beschreibung.split(';').map((line, i) => (
+                  <div key={i}>{line}</div>
+                ))}
               </div>
+
+              {currentProduct.Bild && (
+                <div style={{ marginBottom: '15px' }}>
+                  <img
+                    src={`/api/image/ask/${currentProduct.Artikelnummer}`}
+                    alt={currentProduct.Artikelnummer}
+                    style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ddd' }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none'
+                    }}
+                  />
+                </div>
+              )}
+
               {currentProduct.URL && (
                 <a
                   href={currentProduct.URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: '#007bff' }}
+                  style={{ color: '#007bff', textDecoration: 'none' }}
                 >
                   🔗 Link zum Shop
                 </a>
               )}
             </div>
 
-            {/* Right: Filters */}
+            {/* RIGHT COLUMN: Filters and Matches */}
             <div>
-              <h3>Filter für Matches</h3>
+              <h3 style={{ marginTop: 0 }}>Filter für Matches</h3>
+
+              {/* Filter Type */}
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ marginRight: '15px' }}>
                   <input
@@ -298,8 +328,11 @@ const CatalogMapper = () => {
                 </label>
               </div>
 
+              {/* Similarity Slider */}
               <div style={{ marginBottom: '15px' }}>
-                <label>Min. Ähnlichkeit: {minSimilarity}%</label>
+                <label style={{ display: 'block', marginBottom: '5px' }}>
+                  Ähnlichkeit: {minSimilarity}%
+                </label>
                 <input
                   type="range"
                   min="0"
@@ -312,12 +345,27 @@ const CatalogMapper = () => {
                   style={{ width: '100%' }}
                 />
               </div>
+
+              {/* Text Filter */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px' }}>
+                  Text in Beschreibung:
+                </label>
+                <input
+                  type="text"
+                  value={filterText}
+                  onChange={(e) => setFilterText(e.target.value)}
+                  placeholder="Filter nach Text..."
+                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '3px' }}
+                />
+              </div>
+
             </div>
           </div>
 
-          {/* Matches */}
-          <div className="mapper-section">
-            <h3>Top Matches aus Portfolio ({matches.length})</h3>
+          {/* Matches List - Full Width Below Columns */}
+          <div style={{ marginBottom: '20px' }}>
+            <h4>Top Matches ({filteredMatches.length})</h4>
             {matchLoading ? (
               <div>Suche Matches...</div>
             ) : (
@@ -325,24 +373,31 @@ const CatalogMapper = () => {
                 border: '1px solid #ccc',
                 maxHeight: '300px',
                 overflowY: 'auto',
-                fontFamily: 'monospace',
-                fontSize: '12px'
+                fontSize: '13px'
               }}>
-                {matches.length === 0 ? (
+                {filteredMatches.length === 0 ? (
                   <div style={{ padding: '10px' }}>Keine Matches gefunden</div>
                 ) : (
-                  matches.map((match, idx) => (
+                  filteredMatches.map((match, idx) => (
                     <div
                       key={idx}
                       onClick={() => setSelectedMatch(match.syskomp_neu)}
                       style={{
-                        padding: '8px',
+                        padding: '10px',
                         cursor: 'pointer',
                         backgroundColor: selectedMatch === match.syskomp_neu ? '#e3f2fd' : 'transparent',
                         borderBottom: '1px solid #eee'
                       }}
                     >
-                      <strong>{match.syskomp_neu}</strong> | {match.item || match.bosch || '-'} ({(match.similarity * 100).toFixed(0)}%) - {match.description.substring(0, 60)}...
+                      <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+                        {match.syskomp_neu} {match.syskomp_alt && match.syskomp_alt !== '-' ? `/ ${match.syskomp_alt}` : ''}
+                        <span style={{ float: 'right', color: '#666' }}>
+                          {(match.similarity * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#555' }}>
+                        {match.description}
+                      </div>
                     </div>
                   ))
                 )}
@@ -350,8 +405,8 @@ const CatalogMapper = () => {
             )}
           </div>
 
-          {/* Actions */}
-          <div className="mapper-section" style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+          {/* Bottom Row: Action Buttons */}
+          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '15px' }}>
             <button onClick={handlePrevious} disabled={currentIndex === 0}>
               ◀ Zurück
             </button>
@@ -365,7 +420,8 @@ const CatalogMapper = () => {
               style={{
                 backgroundColor: selectedMatch ? '#28a745' : '#ccc',
                 color: 'white',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                padding: '8px 16px'
               }}
             >
               ✓ Passt (Speichern)
@@ -375,12 +431,13 @@ const CatalogMapper = () => {
             </button>
           </div>
 
+          {/* Footer: Selected Match Info */}
           {selectedMatch && (
-            <div style={{ textAlign: 'center', marginTop: '10px', color: 'green' }}>
-              Gewählt: {selectedMatch} → wird in Spalte H (ASK) gespeichert
+            <div style={{ textAlign: 'center', padding: '10px', backgroundColor: '#d4edda', color: '#155724', borderRadius: '4px' }}>
+              Gewählt: <strong>{selectedMatch}</strong> → wird in Spalte H (ASK) gespeichert
             </div>
           )}
-        </>
+        </div>
       )}
 
       {catalogProducts.length === 0 && !loading && (

@@ -584,10 +584,9 @@ const PortfolioConversion = () => {
         </button>
       </div>
 
-      {currentTab === 'mapper' ? (
-        <CatalogMapper />
-      ) : (
-        <div className="tool-sections">
+      {/* Render each tab independently */}
+      {currentTab === 'search' && (
+        <div className="tab-content">
           {currentTab === 'search' && (
             <div className="section single-section">
               <h2>Einzelsuche</h2>
@@ -725,7 +724,11 @@ const PortfolioConversion = () => {
           )}
         </div>
           )}
+        </div>
+      )}
 
+      {currentTab === 'batch' && (
+        <div className="tab-content">
         {currentTab === 'batch' && (
         <div className="section batch-section">
           <h2>Batch-Konvertierung</h2>
@@ -804,7 +807,11 @@ const PortfolioConversion = () => {
           )}
         </div>
         )}
-      </div>
+        </div>
+      )}
+
+      {currentTab === 'mapper' && (
+        <CatalogMapper />
       )}
 
       {/* Info Modal */}
