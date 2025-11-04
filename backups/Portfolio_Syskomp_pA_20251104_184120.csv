@@ -1362,7 +1362,7 @@
 120001166;282800150;"Laufrolle D14~; St, 100 CR 6,;gehärtet geschliffen,;zweireihig kugelgelagert mit;zwei Deckscheiben,";0.0.294.52;;-;-;
 120001167;282800151;"Bolzen 8 D14 zentrisch;Material: stahl verzinkt;;";0.0.294.10;;-;-;
 120001168;282800152;"Bolzen 8 D14 exzentrisch;Material: stahl verzinkt;;";0.0.294.12;;-;-;
-120001169;282800200;"Wellenklemmprofil 8 D14;;10 St. x 3000mm;";0.0.453.68;;-;-;
+120001169;282800200;"Wellenklemmprofil 8 D14;;10 St. x 3000mm;";0.0.453.68;;-;-;20100100
 120001173;282899200;"Wellenklemmprofil 8 D14;;;";0.0.453.68;;-;-;
 120001174;283500500;"Bodenplattte 8 160 Al,;eloxiert natur 2 Abdeckkappen;8 160x28 3 Gewindestifte DIN;915 M10x30, St. blank 3";0.0.026.17;;-;-;
 120001175;283500501;"Bodenplatte 8 280 Al, eloxiert;natur 2 Abdeckkappen 8 160x28;;";0.0.388.69;;-;-;
@@ -1531,7 +1531,7 @@
 140000066;403538557;"Dämpfungsplatte für;Gelenkstellfuß 45 Material:;thermoplastischer Elastomer;";;3842538557;;;
 140000067;403538558;"Dämpfungsplatte für;Gelenkstellfuß 60 Material:;thermoplastischer Elastomer;";0.0.439.33;3842538558;1010072;ANTSTE8.60;
 140000068;403538559;"Dämpfungsplatte für;Gelenkstellfuß 80 Material:;thermoplastischer Elastomer;";0.0.265.61;3842538559;1010073;ANTSTE80;
-140000069;403538676;"45 Teller für Gelenkstellfüße;Kugel 1 Material:;Zinkdruckguss schwarz pulverb.;Tragkraft: 3000 kg";;3842538676;;;
+140000069;403538676;"45 Teller für Gelenkstellfüße;Kugel 1 Material:;Zinkdruckguss schwarz pulverb.;Tragkraft: 3000 kg";;3842538676;;;12345678
 140000070;403538680;"Fußplatte 80 ovel mit;Anschraubbohrung für;Gelenkstellfuss Kugel 15;Material: Zinkdruckguss";;3842538680;;;
 140000071;403538681;"Teller 40 mit Ausleger für;Gelenkstellfuss Kugel 15;Material: Kunststoff PA,;glaskugelverstärlt schwarz";;;;;
 140000072;403538932;"60 Teller für Gelenkstellfüße;Kugel 1 mit Anschraubbohrung;Material: Zinkdruckguss;schwarz pulverbeschichtet";;3842538932;;;
@@ -2067,7 +2067,7 @@
 140000863;481992400;"Aluminiumprofil 30x30 3N;Nut 8;;";;3842992400;;;
 140000864;481992430;"Aluminiumprofil 30x45;Nut 8/10;;";;3842992430;;;
 140000865;481992457;"Aluminiumprofil 30x60;Nut 8;;";;3842992457;;;
-140000866;481992476;"Aluminiumprofil 11x20;Nut 8;;";;3842992476;;;20100100
+140000866;481992476;"Aluminiumprofil 11x20;Nut 8;;";;3842992476;;;
 140000867;481992493;"Rahmenprofil 22,5x30;Nut 8;;";;3842992493;;;
 140000868;481992896;"Aluminiumprofil 30x30 R;Nut 8;;";;3842992896;;;
 140000869;481992934;"Streckenprofil SP1;Nut 8;;";;3842992934;;;

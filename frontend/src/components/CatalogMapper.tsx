@@ -12,6 +12,7 @@ interface CatalogProduct {
   Beschreibung: string
   Bild?: string
   URL?: string
+  already_mapped?: boolean
 }
 
 interface PortfolioMatch {
@@ -36,6 +37,7 @@ const CatalogMapper = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [imageDir, setImageDir] = useState<string>('')
 
   // Matching
   const [matches, setMatches] = useState<PortfolioMatch[]>([])
@@ -87,6 +89,7 @@ const CatalogMapper = () => {
 
       const data = await response.json()
       setCatalogProducts(data.products || [])
+      setImageDir(data.image_dir || '')
       setCurrentIndex(0)
 
       // Load matches for first product
@@ -191,7 +194,9 @@ const CatalogMapper = () => {
   }
 
   const currentProduct = catalogProducts[currentIndex]
-  const catalogName = catalogs.find(c => c.path === selectedCatalog)?.name || ''
+  const catalogInfo = catalogs.find(c => c.path === selectedCatalog)
+  const catalogName = catalogInfo?.name || ''
+  const catalogType = catalogInfo?.type?.toLowerCase() || 'ask'
 
   // Client-side text filtering of matches
   const filteredMatches = matches.filter(match => {
@@ -246,53 +251,51 @@ const CatalogMapper = () => {
           </div>
 
           {/* Filters Block - Above columns */}
-          <div style={{ border: '1px solid #ccc', padding: '15px', borderRadius: '4px', marginBottom: '20px', backgroundColor: '#f9f9f9' }}>
-            <h3 style={{ marginTop: 0, marginBottom: '15px' }}>Filter für Matches</h3>
+          <div style={{ border: '1px solid #ccc', padding: '6px 8px', borderRadius: '3px', marginBottom: '8px', backgroundColor: '#f9f9f9' }}>
+            <h3 style={{ marginTop: 0, marginBottom: '6px', fontSize: '11px' }}>Filter für Matches</h3>
 
-            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
               {/* Filter Type */}
-              <div style={{ flex: '1 1 200px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Typ:</label>
-                <div>
-                  <label style={{ marginRight: '15px' }}>
-                    <input
-                      type="radio"
-                      value="all"
-                      checked={filterType === 'all'}
-                      onChange={(e) => {
-                        setFilterType(e.target.value as 'all')
-                        findMatches(currentProduct.Beschreibung)
-                      }}
-                    /> Alle
-                  </label>
-                  <label style={{ marginRight: '15px' }}>
-                    <input
-                      type="radio"
-                      value="item"
-                      checked={filterType === 'item'}
-                      onChange={(e) => {
-                        setFilterType(e.target.value as 'item')
-                        findMatches(currentProduct.Beschreibung)
-                      }}
-                    /> Item
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      value="bosch"
-                      checked={filterType === 'bosch'}
-                      onChange={(e) => {
-                        setFilterType(e.target.value as 'bosch')
-                        findMatches(currentProduct.Beschreibung)
-                      }}
-                    /> Bosch
-                  </label>
-                </div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <label style={{ fontWeight: 'bold', fontSize: '10px' }}>Typ:</label>
+                <label style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <input
+                    type="radio"
+                    value="all"
+                    checked={filterType === 'all'}
+                    onChange={(e) => {
+                      setFilterType(e.target.value as 'all')
+                      findMatches(currentProduct.Beschreibung)
+                    }}
+                  /> Alle
+                </label>
+                <label style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <input
+                    type="radio"
+                    value="item"
+                    checked={filterType === 'item'}
+                    onChange={(e) => {
+                      setFilterType(e.target.value as 'item')
+                      findMatches(currentProduct.Beschreibung)
+                    }}
+                  /> Item
+                </label>
+                <label style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                  <input
+                    type="radio"
+                    value="bosch"
+                    checked={filterType === 'bosch'}
+                    onChange={(e) => {
+                      setFilterType(e.target.value as 'bosch')
+                      findMatches(currentProduct.Beschreibung)
+                    }}
+                  /> Bosch
+                </label>
               </div>
 
               {/* Similarity Slider */}
-              <div style={{ flex: '1 1 200px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: '1 1 150px' }}>
+                <label style={{ fontWeight: 'bold', fontSize: '10px', whiteSpace: 'nowrap' }}>
                   Ähnlichkeit: {minSimilarity}%
                 </label>
                 <input
@@ -304,21 +307,21 @@ const CatalogMapper = () => {
                     setMinSimilarity(Number(e.target.value))
                   }}
                   onMouseUp={() => findMatches(currentProduct.Beschreibung)}
-                  style={{ width: '100%' }}
+                  style={{ flex: 1, minWidth: '80px' }}
                 />
               </div>
 
               {/* Text Filter */}
-              <div style={{ flex: '1 1 200px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>
-                  Text in Beschreibung:
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: '1 1 150px' }}>
+                <label style={{ fontWeight: 'bold', fontSize: '10px', whiteSpace: 'nowrap' }}>
+                  Text:
                 </label>
                 <input
                   type="text"
                   value={filterText}
                   onChange={(e) => setFilterText(e.target.value)}
-                  placeholder="Filter nach Text..."
-                  style={{ width: '100%', padding: '6px', border: '1px solid #ccc', borderRadius: '3px' }}
+                  placeholder="Filter..."
+                  style={{ flex: 1, padding: '3px 5px', border: '1px solid #ccc', borderRadius: '2px', fontSize: '10px' }}
                 />
               </div>
             </div>
@@ -331,7 +334,8 @@ const CatalogMapper = () => {
               <h3 style={{ marginTop: 0 }}>Katalog-Produkt</h3>
 
               <div style={{ marginBottom: '15px' }}>
-                <strong>Art. Nr:</strong> {currentProduct.Artikelnummer}
+                <strong>Art. Nr:</strong> <span style={{ color: currentProduct.already_mapped ? '#c62828' : 'inherit', fontWeight: currentProduct.already_mapped ? 'bold' : 'normal' }}>{currentProduct.Artikelnummer}</span>
+                {currentProduct.already_mapped && <span style={{ marginLeft: '8px', fontSize: '10px', color: '#c62828' }}>(bereits zugeordnet)</span>}
               </div>
 
               <div style={{ marginBottom: '15px' }}>
@@ -344,7 +348,7 @@ const CatalogMapper = () => {
               {currentProduct.Bild && (
                 <div style={{ marginBottom: '15px' }}>
                   <img
-                    src={`/api/image/ask/${currentProduct.Artikelnummer}`}
+                    src={`${API_URL}/image/${catalogType}/${currentProduct.Artikelnummer}`}
                     alt={currentProduct.Artikelnummer}
                     style={{ maxWidth: '100%', height: 'auto', border: '1px solid #ddd' }}
                     onError={(e) => {
@@ -369,69 +373,73 @@ const CatalogMapper = () => {
             {/* RIGHT COLUMN: Buttons, Matches */}
             <div>
               {/* Action Buttons */}
-              <div style={{ marginBottom: '20px' }}>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                  <button onClick={handlePrevious} disabled={currentIndex === 0} style={{ flex: 1 }}>
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button
+                    onClick={handleSaveMapping}
+                    disabled={!selectedMatch}
+                    className="action-button"
+                    style={{
+                      flex: 2,
+                      backgroundColor: selectedMatch ? '#28a745' : '#ccc',
+                      color: 'white',
+                      fontWeight: 'bold',
+                      padding: '6px 10px',
+                      fontSize: '11px'
+                    }}
+                  >
+                    ✓ Passt
+                  </button>
+                  <button onClick={handlePrevious} disabled={currentIndex === 0} style={{ flex: 1, padding: '4px 6px', fontSize: '10px' }}>
                     ◀ Zurück
                   </button>
-                  <button onClick={handleSkip} style={{ flex: 1 }}>
-                    Überspringen
-                  </button>
-                  <button onClick={handleNext} disabled={currentIndex >= catalogProducts.length - 1} style={{ flex: 1 }}>
+                  <button onClick={handleNext} disabled={currentIndex >= catalogProducts.length - 1} style={{ flex: 1, padding: '4px 6px', fontSize: '10px' }}>
                     Weiter ▶
                   </button>
                 </div>
-                <button
-                  onClick={handleSaveMapping}
-                  disabled={!selectedMatch}
-                  className="action-button"
-                  style={{
-                    width: '100%',
-                    backgroundColor: selectedMatch ? '#28a745' : '#ccc',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    padding: '10px 16px'
-                  }}
-                >
-                  ✓ Passt (Speichern)
-                </button>
               </div>
 
               {/* Top Matches */}
               <div>
-                <h4 style={{ marginBottom: '10px' }}>Top Matches ({filteredMatches.length})</h4>
+                <h4 style={{ marginBottom: '6px', fontSize: '12px' }}>Top Matches ({filteredMatches.length})</h4>
                 {matchLoading ? (
-                  <div>Suche Matches...</div>
+                  <div style={{ fontSize: '10px', padding: '4px' }}>Suche Matches...</div>
                 ) : (
                   <div style={{
                     border: '1px solid #ccc',
-                    maxHeight: '400px',
+                    maxHeight: '500px',
                     overflowY: 'auto',
-                    fontSize: '13px'
+                    fontSize: '10px'
                   }}>
                     {filteredMatches.length === 0 ? (
-                      <div style={{ padding: '10px' }}>Keine Matches gefunden</div>
+                      <div style={{ padding: '6px', fontSize: '10px' }}>Keine Matches gefunden</div>
                     ) : (
                       filteredMatches.map((match, idx) => (
                         <div
                           key={idx}
                           onClick={() => setSelectedMatch(match.syskomp_neu)}
                           style={{
-                            padding: '10px',
+                            padding: '4px 6px',
                             cursor: 'pointer',
                             backgroundColor: selectedMatch === match.syskomp_neu ? '#e3f2fd' : 'transparent',
-                            borderBottom: '1px solid #eee'
+                            borderBottom: '1px solid #eee',
+                            fontSize: '10px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
                           }}
                         >
-                          <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
-                            {match.syskomp_neu} {match.syskomp_alt && match.syskomp_alt !== '-' ? `/ ${match.syskomp_alt}` : ''}
-                            <span style={{ float: 'right', color: '#666' }}>
-                              {(match.similarity * 100).toFixed(0)}%
+                          <div style={{ flex: 1 }}>
+                            <span style={{ fontWeight: 'bold' }}>
+                              {match.syskomp_neu} {match.syskomp_alt && match.syskomp_alt !== '-' ? `/ ${match.syskomp_alt}` : ''}
+                            </span>
+                            <span style={{ color: '#555' }}>
+                              {' - ' + match.description.split(';').filter(line => line.trim()).map(line => line.trim()).join(' - ')}
                             </span>
                           </div>
-                          <div style={{ fontSize: '12px', color: '#555' }}>
-                            {match.description}
-                          </div>
+                          <span style={{ color: '#666', marginLeft: '8px', whiteSpace: 'nowrap' }}>
+                            {(match.similarity * 100).toFixed(0)}%
+                          </span>
                         </div>
                       ))
                     )}

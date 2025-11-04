@@ -98,6 +98,8 @@ def find_image(artnr, source_type):
         ]
     elif source_type == 'ask':
         possible_dirs = [
+            os.path.join(base_dir, "ASK_CATALOG", "ASK-bosch-images"),
+            os.path.join(base_dir, "ASK_CATALOG", "ASK-item-images"),
             os.path.join(base_dir, "ASK_CATALOG", "ASKbosch-all-images"),
             os.path.join(base_dir, "ASK_CATALOG", "ASKitem-all-images"),
             os.path.join(base_dir, "ASK-catalog", "ASKbosch-all-images"),
@@ -538,6 +540,21 @@ def load_catalog():
         catalog_name = os.path.splitext(os.path.basename(catalog_path))[0]
         parent_dir = os.path.dirname(catalog_path)
         image_dir = os.path.join(parent_dir, f"{catalog_name}-images")
+
+        # Check which article numbers already exist in Portfolio CSV (column H for ASK)
+        existing_numbers = set()
+        portfolio_path = os.path.join(os.path.dirname(__file__), '..', 'Portfolio_Syskomp_pA.csv')
+        if os.path.exists(portfolio_path):
+            with open(portfolio_path, 'r', encoding='utf-8') as pf:
+                portfolio_reader = csv.reader(pf, delimiter=';')
+                for row in portfolio_reader:
+                    if len(row) > 7 and row[7]:  # Column H (index 7)
+                        existing_numbers.add(row[7].strip())
+
+        # Mark products that already exist
+        for product in products:
+            art_nr = product.get('Artikelnummer', '').strip()
+            product['already_mapped'] = art_nr in existing_numbers
 
         return jsonify({
             'success': True,
