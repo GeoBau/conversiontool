@@ -1,9 +1,11 @@
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
-from openpyxl import load_workbook
 import os
+import csv
 from collections import defaultdict
 from pathlib import Path
+from validators import validate_generic, get_validation_url, validate_url_exists
+from file_lock import CSVManager
 
 app = Flask(__name__)
 CORS(app)
@@ -21,32 +23,47 @@ COLUMN_NAMES = {
     'H': 'ASK'
 }
 
+# CSV-Manager initialisieren
+base_dir = os.path.dirname(os.path.dirname(__file__))
+csv_path = os.path.join(base_dir, 'Portfolio_Syskomp_pA.csv')
+csv_manager = CSVManager(csv_path)
+
 def load_data():
-    """Load Portfolio_Syskomp_pA.xlsx data"""
-    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Portfolio_Syskomp_pA.xlsx')
+    """Load Portfolio_Syskomp_pA.csv data"""
+    filepath = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'Portfolio_Syskomp_pA.csv')
 
     if not os.path.exists(filepath):
         print(f"ERROR: File not found: {filepath}")
         return
 
     try:
-        wb = load_workbook(filepath, data_only=True)
-        ws = wb.active
-        data.clear()
+        with open(filepath, 'r', encoding='utf-8-sig', newline='') as f:
+            reader = csv.reader(f, delimiter=';')
+            data.clear()
 
-        for row_idx in range(2, ws.max_row + 1):
-            row_dict = {}
-            for col_idx, col_letter in enumerate(['A','B','C','D','E','F','G','H'], start=1):
-                cell_value = ws.cell(row=row_idx, column=col_idx).value
-                row_dict[col_letter] = str(cell_value).strip() if cell_value else ""
+            # Skip header
+            next(reader, None)
 
-            # Index all searchable columns (all except C which is description)
-            for col_letter in ['A','B','D','E','F','G','H']:
-                value = row_dict.get(col_letter, "")
-                if value and value != "None":
-                    data[col_letter][value] = row_dict
+            row_count = 0
+            for row in reader:
+                if len(row) < 8:
+                    # Pad row with empty strings if necessary
+                    row.extend([''] * (8 - len(row)))
 
-        print(f"Data loaded: {ws.max_row-1} rows, {sum(len(v) for v in data.values())} indexed entries")
+                row_dict = {}
+                for col_idx, col_letter in enumerate(['A','B','C','D','E','F','G','H']):
+                    value = row[col_idx].strip() if col_idx < len(row) else ""
+                    row_dict[col_letter] = value if value and value != 'None' else ""
+
+                # Index all searchable columns (all except C which is description)
+                for col_letter in ['A','B','D','E','F','G','H']:
+                    value = row_dict.get(col_letter, "")
+                    if value:
+                        data[col_letter][value] = row_dict
+
+                row_count += 1
+
+        print(f"Data loaded from CSV: {row_count} rows, {sum(len(v) for v in data.values())} indexed entries")
     except Exception as e:
         print(f"ERROR loading data: {e}")
 
@@ -359,6 +376,257 @@ def get_stats():
         'alvaris': len(data.get('F', {})),
         'ask': len(data.get('H', {}))
     })
+
+@app.route('/api/validate-number', methods=['POST'])
+def validate_number():
+    """Validiert eine Artikelnummer"""
+    try:
+        req_data = request.json
+        col = req_data.get('col', '').upper()
+        number = req_data.get('number', '').strip()
+        check_url = req_data.get('check_url', False)
+
+        if not col or not number:
+            return jsonify({'error': 'Spalte und Nummer erforderlich'}), 400
+
+        # Format-Validierung
+        is_valid, message = validate_generic(number, col)
+
+        if not is_valid:
+            return jsonify({
+                'valid': False,
+                'message': message,
+                'format_valid': False
+            })
+
+        # Optional: URL-Check
+        url_valid = True
+        url_message = "Nicht geprüft"
+
+        if check_url:
+            validation_url = get_validation_url(col, number)
+            if validation_url:
+                url_valid, url_message = validate_url_exists(validation_url, col, number)
+            else:
+                url_message = "Keine URL zum Prüfen verfügbar"
+
+        return jsonify({
+            'valid': is_valid and url_valid,
+            'message': message if not is_valid else url_message,
+            'format_valid': is_valid,
+            'url_valid': url_valid
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update-entry', methods=['POST'])
+def update_entry():
+    """Aktualisiert eine Zelle in der CSV"""
+    try:
+        req_data = request.json
+        syskomp_neu = req_data.get('syskomp_neu', '').strip()
+        col = req_data.get('col', '').upper()
+        value = req_data.get('value', '').strip()
+
+        if not syskomp_neu or not col or not value:
+            return jsonify({'error': 'Syskomp neu, Spalte und Wert erforderlich'}), 400
+
+        # Validierung
+        is_valid, message = validate_generic(value, col)
+        if not is_valid:
+            return jsonify({'error': f'Validierung fehlgeschlagen: {message}'}), 400
+
+        # Spalten-Index berechnen (A=0, B=1, ..., H=7)
+        col_index = ord(col) - ord('A')
+
+        if col_index < 0 or col_index > 7:
+            return jsonify({'error': 'Ungültige Spalte'}), 400
+
+        # CSV aktualisieren
+        success, result_message = csv_manager.update_cell(syskomp_neu, col_index, value)
+
+        if not success:
+            return jsonify({'error': result_message}), 500
+
+        # Daten neu laden
+        load_data()
+
+        return jsonify({
+            'success': True,
+            'message': result_message,
+            'syskomp_neu': syskomp_neu,
+            'col': col,
+            'value': value
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/undo', methods=['POST'])
+def undo_last():
+    """Macht die letzte Änderung rückgängig (max 3 Min alt)"""
+    try:
+        success, message = csv_manager.undo_last_action()
+
+        if not success:
+            return jsonify({'error': message}), 400
+
+        # Daten neu laden
+        load_data()
+
+        return jsonify({
+            'success': True,
+            'message': message
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/scan-catalogs', methods=['GET'])
+def scan_catalogs():
+    """Scannt nach Katalog-CSV-Dateien in verschiedenen Verzeichnissen"""
+    try:
+        catalog_files = []
+
+        # Scan ASK_CATALOG
+        ask_catalog_dir = os.path.join(base_dir, "ASK_CATALOG")
+        if os.path.exists(ask_catalog_dir):
+            for file in sorted(os.listdir(ask_catalog_dir)):
+                if file.endswith('.csv') and file.lower() != 'ask-syskomp.csv':
+                    catalog_files.append({
+                        'path': os.path.join(ask_catalog_dir, file),
+                        'name': file,
+                        'type': 'ASK'
+                    })
+
+        # Scan ALVARIS_CATALOG
+        alvaris_catalog_dir = os.path.join(base_dir, "ALVARIS_CATALOG")
+        if os.path.exists(alvaris_catalog_dir):
+            for file in sorted(os.listdir(alvaris_catalog_dir)):
+                if file.endswith('.csv') and file.lower() != 'ask-syskomp.csv':
+                    catalog_files.append({
+                        'path': os.path.join(alvaris_catalog_dir, file),
+                        'name': file,
+                        'type': 'ALVARIS'
+                    })
+
+        return jsonify({
+            'catalogs': catalog_files
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/load-catalog', methods=['POST'])
+def load_catalog():
+    """Lädt einen Katalog (ASK/ALVARIS) und gibt Produkte zurück"""
+    try:
+        req_data = request.json
+        catalog_path = req_data.get('catalog_path', '')
+
+        if not catalog_path or not os.path.exists(catalog_path):
+            return jsonify({'error': 'Katalog-Datei nicht gefunden'}), 400
+
+        products = []
+        with open(catalog_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                products.append(row)
+
+        # Determine image directory
+        catalog_name = os.path.splitext(os.path.basename(catalog_path))[0]
+        parent_dir = os.path.dirname(catalog_path)
+        image_dir = os.path.join(parent_dir, f"{catalog_name}-images")
+
+        return jsonify({
+            'success': True,
+            'products': products,
+            'catalog_name': catalog_name,
+            'image_dir': image_dir,
+            'total': len(products)
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/find-similar', methods=['POST'])
+def find_similar():
+    """Findet ähnliche Produkte aus Portfolio CSV basierend auf Beschreibung"""
+    try:
+        from difflib import SequenceMatcher
+        import re
+
+        req_data = request.json
+        search_description = req_data.get('description', '').strip().lower()
+        min_similarity = req_data.get('min_similarity', 0.0)
+        filter_type = req_data.get('filter_type', 'all')  # 'all', 'item', 'bosch'
+
+        if not search_description:
+            return jsonify({'error': 'Beschreibung erforderlich'}), 400
+
+        matches = []
+
+        # Durchsuche alle Zeilen im Portfolio CSV
+        for col_letter in ['A']:  # Nur Syskomp neu
+            for syskomp_neu, row_data in data.get(col_letter, {}).items():
+                description = row_data.get('C', '').lower()
+
+                if not description:
+                    continue
+
+                # Filter nach Typ (Item/Bosch)
+                item_nr = row_data.get('D', '')
+                bosch_nr = row_data.get('E', '')
+
+                if filter_type == 'item' and not item_nr:
+                    continue
+                if filter_type == 'bosch' and not bosch_nr:
+                    continue
+
+                # Berechne Ähnlichkeit
+                similarity = SequenceMatcher(None, search_description, description).ratio()
+
+                # Bonus für "Profil X" <-> "Nut X" Matching
+                profil_match = re.search(r'profil\s*(\d+)', search_description)
+                nut_match = re.search(r'nut\s*(\d+)', description)
+
+                if profil_match and nut_match:
+                    if profil_match.group(1) == nut_match.group(1):
+                        similarity = min(1.0, similarity + 0.3)
+
+                # Reverse check
+                nut_match1 = re.search(r'nut\s*(\d+)', search_description)
+                profil_match2 = re.search(r'profil\s*(\d+)', description)
+
+                if nut_match1 and profil_match2:
+                    if nut_match1.group(1) == profil_match2.group(1):
+                        similarity = min(1.0, similarity + 0.3)
+
+                if similarity >= min_similarity:
+                    matches.append({
+                        'syskomp_neu': row_data.get('A', ''),
+                        'syskomp_alt': row_data.get('B', ''),
+                        'description': row_data.get('C', ''),
+                        'item': row_data.get('D', ''),
+                        'bosch': row_data.get('E', ''),
+                        'alvaris_artnr': row_data.get('F', ''),
+                        'alvaris_matnr': row_data.get('G', ''),
+                        'ask': row_data.get('H', ''),
+                        'similarity': similarity
+                    })
+
+        # Sortiere nach Ähnlichkeit (höchste zuerst)
+        matches.sort(key=lambda x: x['similarity'], reverse=True)
+
+        return jsonify({
+            'success': True,
+            'matches': matches[:20],  # Top 20
+            'total_found': len(matches)
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Load data on startup
 load_data()

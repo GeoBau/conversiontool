@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import * as XLSX from 'xlsx'
+import EditableField from './EditableField'
+import CatalogMapper from './CatalogMapper'
 import './ConversionTool.css'
 
 interface SearchMatch {
@@ -56,7 +58,8 @@ const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const PortfolioConversion = () => {
   const [showHeadline, setShowHeadline] = useState(true)
-  const [searchNumber, setSearchNumber] = useState('403538558')
+  const [currentTab, setCurrentTab] = useState<'search' | 'batch' | 'mapper'>('search')
+  const [searchNumber, setSearchNumber] = useState('140000067')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<SearchResult | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -127,6 +130,33 @@ const PortfolioConversion = () => {
       console.error(err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleUpdateEntry = async (syskomp_neu: string, col: string, value: string) => {
+    try {
+      const response = await fetch(`${API_URL}/update-entry`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          syskomp_neu,
+          col,
+          value
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Fehler beim Speichern')
+      }
+
+      // Nach erfolgreicher Aktualisierung neu suchen
+      await handleSearch()
+
+    } catch (err: any) {
+      throw new Error(err.message || 'Fehler beim Aktualisieren')
     }
   }
 
@@ -511,10 +541,56 @@ const PortfolioConversion = () => {
         </div>
       )}
 
-      <div className="tool-sections">
-        {/* Single Input Section */}
-        <div className="section single-section">
-          <h2>Einzelsuche</h2>
+      {/* Tab Navigation */}
+      <div className="tab-navigation" style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ccc', paddingBottom: '10px' }}>
+        <button
+          onClick={() => setCurrentTab('search')}
+          style={{
+            padding: '10px 20px',
+            background: currentTab === 'search' ? '#007bff' : '#f0f0f0',
+            color: currentTab === 'search' ? 'white' : 'black',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: currentTab === 'search' ? 'bold' : 'normal'
+          }}
+        >
+          Suche
+        </button>
+        <button
+          onClick={() => setCurrentTab('batch')}
+          style={{
+            padding: '10px 20px',
+            background: currentTab === 'batch' ? '#007bff' : '#f0f0f0',
+            color: currentTab === 'batch' ? 'white' : 'black',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: currentTab === 'batch' ? 'bold' : 'normal'
+          }}
+        >
+          Batch
+        </button>
+        <button
+          onClick={() => setCurrentTab('mapper')}
+          style={{
+            padding: '10px 20px',
+            background: currentTab === 'mapper' ? '#007bff' : '#f0f0f0',
+            color: currentTab === 'mapper' ? 'white' : 'black',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: currentTab === 'mapper' ? 'bold' : 'normal'
+          }}
+        >
+          Mapper
+        </button>
+      </div>
+
+      {currentTab === 'mapper' ? (
+        <CatalogMapper />
+      ) : (
+        <div className="tool-sections">
+          {currentTab === 'search' && (
+            <div className="section single-section">
+              <h2>Einzelsuche</h2>
 
           <div className="input-row">
             <input
@@ -549,21 +625,22 @@ const PortfolioConversion = () => {
                     Gefunden in: <strong>{match.found_in_col_name}</strong>
                   </div>
                   <div className="result-grid">
-                    {match.syskomp_neu && match.syskomp_neu !== '-' && (
-                      <div className="result-row highlight">
-                        <span className="result-label">Syskomp neu:</span>
-                        <span className="result-value">
-                          <a
-                            href={`https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_neu)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="number-link"
-                          >
-                            {match.syskomp_neu}
-                          </a>
-                        </span>
-                      </div>
-                    )}
+                    {/* Syskomp neu - Always show (nicht editierbar) */}
+                    <div className="result-row highlight">
+                      <span className="result-label">Syskomp neu:</span>
+                      <span className="result-value">
+                        <a
+                          href={`https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_neu)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="number-link"
+                        >
+                          {match.syskomp_neu}
+                        </a>
+                      </span>
+                    </div>
+
+                    {/* Syskomp alt - Always show (nicht editierbar) */}
                     {match.syskomp_alt && match.syskomp_alt !== '-' && (
                       <div className="result-row highlight">
                         <span className="result-label">Syskomp alt:</span>
@@ -579,62 +656,49 @@ const PortfolioConversion = () => {
                         </span>
                       </div>
                     )}
-                    {match.item && match.item !== '-' && (
-                      <div className="result-row">
-                        <span className="result-label">Item:</span>
-                        <span className="result-value">
-                          <a
-                            href={`https://www.item24.com/de-de/search/?q=${encodeURIComponent(match.item)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="number-link"
-                          >
-                            {match.item}
-                          </a>
-                        </span>
-                      </div>
-                    )}
-                    {match.bosch && match.bosch !== '-' && (
-                      <div className="result-row">
-                        <span className="result-label">Bosch:</span>
-                        <span className="result-value">
-                          <a
-                            href={`https://www.boschrexroth.com/de/de/search.html?q=${encodeURIComponent(match.bosch)}&origin=header`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="number-link"
-                          >
-                            {match.bosch}
-                          </a>
-                        </span>
-                      </div>
-                    )}
-                    {((match.alvaris_artnr && match.alvaris_artnr !== '-') ||
-                      (match.alvaris_matnr && match.alvaris_matnr !== '-')) && (
-                      <div className="result-row">
-                        <span className="result-label">Alvaris:</span>
-                        <span className="result-value">
-                          {match.alvaris_artnr && match.alvaris_artnr !== '-' ? (
-                            <a
-                              href={`https://www.alvaris.com/de/?s=${encodeURIComponent(match.alvaris_artnr)}&trp-form-language=de`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="number-link"
-                            >
-                              {match.alvaris_artnr}
-                            </a>
-                          ) : '-'}
-                          {' / '}
-                          {match.alvaris_matnr && match.alvaris_matnr !== '-' ? match.alvaris_matnr : '-'}
-                        </span>
-                      </div>
-                    )}
-                    {match.ask && match.ask !== '-' && (
-                      <div className="result-row">
-                        <span className="result-label">ASK:</span>
-                        <span className="result-value">{match.ask}</span>
-                      </div>
-                    )}
+
+                    {/* Item - Immer anzeigen, editierbar wenn leer */}
+                    <EditableField
+                      label="Item"
+                      value={match.item}
+                      column="D"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'D', value)}
+                      linkUrl={match.item && match.item !== '-' ? `https://www.item24.com/de-de/search/?q=${encodeURIComponent(match.item)}` : undefined}
+                    />
+
+                    {/* Bosch - Immer anzeigen, editierbar wenn leer */}
+                    <EditableField
+                      label="Bosch"
+                      value={match.bosch}
+                      column="E"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'E', value)}
+                      linkUrl={match.bosch && match.bosch !== '-' ? `https://www.boschrexroth.com/de/de/search.html?q=${encodeURIComponent(match.bosch)}&origin=header` : undefined}
+                    />
+
+                    {/* Alvaris Artnr - Immer anzeigen, editierbar wenn leer */}
+                    <EditableField
+                      label="Alvaris Artnr"
+                      value={match.alvaris_artnr}
+                      column="F"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'F', value)}
+                      linkUrl={match.alvaris_artnr && match.alvaris_artnr !== '-' ? `https://www.alvaris.com/de/?s=${encodeURIComponent(match.alvaris_artnr)}&trp-form-language=de` : undefined}
+                    />
+
+                    {/* Alvaris Matnr - Immer anzeigen, editierbar wenn leer */}
+                    <EditableField
+                      label="Alvaris Matnr"
+                      value={match.alvaris_matnr}
+                      column="G"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'G', value)}
+                    />
+
+                    {/* ASK - Immer anzeigen, editierbar wenn leer */}
+                    <EditableField
+                      label="ASK"
+                      value={match.ask}
+                      column="H"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'H', value)}
+                    />
                   </div>
                   {match.description && (
                     <div className="result-row description">
@@ -660,8 +724,9 @@ const PortfolioConversion = () => {
             </div>
           )}
         </div>
+          )}
 
-        {/* Batch Input Section */}
+        {currentTab === 'batch' && (
         <div className="section batch-section">
           <h2>Batch-Konvertierung</h2>
 
@@ -738,7 +803,9 @@ const PortfolioConversion = () => {
             </div>
           )}
         </div>
+        )}
       </div>
+      )}
 
       {/* Info Modal */}
       {showInfoModal && (
