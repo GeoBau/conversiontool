@@ -12,10 +12,7 @@
     "test:xlsx": "node test_xlsx_parse.js",
     "analyze": "python analyze_data.py",
     "clean:csv": "python clean_artnr.py",
-    "test:clean": "python test_clean_artnr.py",
-    "vercel:build": "npm run build",
-    "vercel:deploy": "vercel",
-    "vercel:deploy:prod": "vercel --prod"
+    "test:clean": "python test_clean_artnr.py"
   },
   "dependencies": {
     "xlsx": "^0.18.5"
