@@ -77,11 +77,22 @@ excel-calculator/*.xls
 
 # Old/backup files
 old/
+portfolio-conversion-tool/
 
 # Documentation that's been moved
 PROMPTS/
 ALVARIS_CATALOG/
 ASK_CATALOG/
+
+# Test files
+test_*.py
+test_*.js
+test_*.json
+test_*.csv
+*_test.py
+debug_*.py
+check_*.py
+
 # System files
 Thumbs.db
 .DS_Store

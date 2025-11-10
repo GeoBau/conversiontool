@@ -1,9 +1,10 @@
 @echo off
 echo ================================
-echo Starting Conversion App
+echo Starting Alvaris Search Tool
 echo ================================
 echo.
 
-python conversion_app.py
+cd ..
+python src\alvaris_search.py
 
 pause

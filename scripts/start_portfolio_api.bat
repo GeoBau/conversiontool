@@ -1,9 +1,11 @@
 @echo off
 echo ================================
-echo Starting Alvaris Search Tool
+echo Starting Portfolio Conversion API
 echo ================================
 echo.
 
-python alvaris_search.py
+cd ..
+cd api
+python app.py
 
 pause

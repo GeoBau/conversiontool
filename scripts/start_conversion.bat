@@ -4,6 +4,7 @@ echo Starting Conversion Tool
 echo ================================
 echo.
 
-python conversion.py
+cd ..
+python src\conversion.py
 
 pause

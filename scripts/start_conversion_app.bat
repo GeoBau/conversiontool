@@ -1,10 +1,10 @@
 @echo off
 echo ================================
-echo Starting Portfolio Conversion API
+echo Starting Conversion App
 echo ================================
 echo.
 
-cd api
-python app.py
+cd ..
+python src\conversion_app.py
 
 pause
