@@ -1,0 +1,113 @@
+================================================================================
+    PORTFOLIO CONVERSION TOOL - QUICK START GUIDE
+================================================================================
+
+DEPLOYMENT PACKAGE CONTENTS:
+---------------------------
+✓ portfolio-conversion-tool.zip (72 MB)
+✓ Complete application (frontend + backend)
+✓ All catalog data (ALVARIS + ASK with images)
+✓ Deployment scripts for Windows and Linux
+
+================================================================================
+INSTALLATION ON NEW SERVER:
+================================================================================
+
+OPTION 1: WINDOWS
+-----------------
+1. Extract portfolio-conversion-tool.zip
+2. Double-click: deploy.bat
+3. Follow on-screen instructions
+4. Start backend: cd api && python app.py
+5. Open browser: http://localhost:5000
+
+OPTION 2: LINUX/MAC
+-------------------
+1. unzip portfolio-conversion-tool.zip
+2. cd portfolio-conversion-tool
+3. chmod +x deploy.sh
+4. ./deploy.sh
+5. cd api && python app.py
+6. Open browser: http://localhost:5000
+
+================================================================================
+SYSTEM REQUIREMENTS:
+================================================================================
+✓ Python 3.8 or higher
+✓ Node.js 16 or higher  
+✓ 500 MB free disk space
+✓ Internet connection (for initial npm/pip installs)
+
+================================================================================
+WHAT'S INCLUDED:
+================================================================================
+
+Frontend (React + TypeScript):
+  • Search tab - Single number conversion
+  • Batch tab - Multiple number conversion with CSV export
+  • Mapper tab - Catalog product mapping tool
+  
+Backend (Flask + Python):
+  • REST API for conversions
+  • Image serving for catalog products
+  • CSV file management
+  • Validation and similarity matching
+
+Data:
+  • Portfolio_Syskomp_pA.csv - Main conversion database
+  • ALVARIS_CATALOG/ - Alvaris products with images
+  • ASK_CATALOG/ - ASK products with images
+
+================================================================================
+DEPLOYMENT SCRIPTS:
+================================================================================
+
+deploy.bat (Windows)      - Automated installation
+deploy.sh (Linux/Mac)     - Automated installation  
+create_package.ps1        - Creates deployment ZIP
+DEPLOY.md                 - Detailed deployment guide
+
+================================================================================
+PRODUCTION DEPLOYMENT:
+================================================================================
+
+For production environments, see DEPLOY.md for:
+  • Nginx configuration
+  • SSL/HTTPS setup
+  • Environment variables
+  • Performance optimization
+  • Backup strategies
+
+================================================================================
+TROUBLESHOOTING:
+================================================================================
+
+Backend won't start:
+  → Check Python version: python --version
+  → Install dependencies: cd api && pip install -r requirements.txt
+
+Frontend won't build:
+  → Check Node version: node --version
+  → Clear cache: cd frontend && npm cache clean --force && npm install
+
+CORS errors:
+  → Ensure backend is running on correct port (5000)
+  → Check VITE_API_URL environment variable
+
+Missing images:
+  → Verify ALVARIS_CATALOG/ and ASK_CATALOG/ folders exist
+  → Check image file permissions
+
+================================================================================
+SUPPORT FILES LOCATION:
+================================================================================
+
+📦 portfolio-conversion-tool.zip    (Current directory)
+📄 DEPLOY.md                        (Inside ZIP)
+📄 README.md                        (Inside ZIP)
+📜 deploy.bat / deploy.sh          (Inside ZIP)
+
+================================================================================
+CREATED: November 4, 2025
+VERSION: 1.0
+================================================================================

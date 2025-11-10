@@ -549,7 +549,7 @@ const ConversionTool = () => {
       <div className="tool-sections">
         {/* Single Input Section */}
         <div className="section single-section">
-          <h2>Einzelsuche</h2>
+          <h2>Einzelsuche (über alle Kataloge Bosch, Item, Alvaris, Ask)</h2>
           <div className="input-row">
             <input
               type="text"

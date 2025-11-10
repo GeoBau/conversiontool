@@ -593,7 +593,7 @@ const PortfolioConversion = () => {
         <div className="tab-content">
           {currentTab === 'search' && (
             <div className="section single-section">
-              <h2>Einzelsuche</h2>
+              <h2>Aritkelnummersuche <br></br>(über alle Kataloge Bosch, Item, Alvaris, Ask)</h2>
 
           <div className="input-row">
             <input

@@ -1,0 +1,139 @@
+====================================
+SERVER-DEPLOYMENT ANLEITUNG
+Portfolio Conversion Tool
+====================================
+
+PROBLEM: "Unexpected token '<', "<html> <h"... is not valid JSON"
+
+URSACHE: Frontend kann Backend nicht erreichen
+
+
+LÖSUNG - DEPLOYMENT-OPTIONEN:
+====================================
+
+
+OPTION 1: LOCALHOST-INSTALLATION (Empfohlen für Desktop)
+------------------------------------------------------------
+
+Für einzelnen Arbeitsplatz / Desktop-PC:
+
+1. Backend starten:
+   cd C:\Temp\portfolio-conversion-tool\api
+   python app.py
+
+   Backend läuft auf: http://localhost:5000
+
+2. Browser öffnen:
+   http://localhost:5000
+
+3. WICHTIG: Frontend wird automatisch vom Backend serviert!
+   (Flask serviert die gebauten Dateien aus frontend/dist)
+
+
+OPTION 2: SERVER-INSTALLATION (für Netzwerkzugriff)
+------------------------------------------------------------
+
+Für Installation auf Windows-Server mit Netzwerkzugriff:
+
+Schritt 1: Backend als Windows-Dienst einrichten
+
+   a) app.py bearbeiten (letzte Zeilen):
+      if __name__ == '__main__':
+          app.run(
+              host='0.0.0.0',      # Alle Interfaces
+              port=5000,
+              debug=False           # Production-Mode
+          )
+
+   b) Firewall-Regel für Port 5000 erstellen:
+      netsh advfirewall firewall add rule name="Portfolio Tool" dir=in action=allow protocol=TCP localport=5000
+
+Schritt 2: Frontend für Server konfigurieren
+
+   a) .env Datei erstellen in frontend/:
+      VITE_API_URL=http://[SERVER-IP]:5000
+
+   b) Frontend neu bauen:
+      cd frontend
+      npm run build
+
+Schritt 3: Backend starten
+   cd api
+   python app.py
+
+Schritt 4: Zugriff
+   Von Client-PC: http://[SERVER-IP]:5000
+
+
+OPTION 3: IIS-DEPLOYMENT (Windows Server mit IIS)
+------------------------------------------------------------
+
+Falls IIS bereits läuft:
+
+1. Python CGI-Handler in IIS konfigurieren
+2. Frontend in IIS wwwroot ablegen
+3. Backend als CGI-Script einbinden
+
+(Detaillierte IIS-Anleitung bei Bedarf verfügbar)
+
+
+FEHLERBEHEBUNG:
+====================================
+
+Problem: JSON-Fehler im Browser
+Lösung:
+  - Backend läuft nicht oder nicht erreichbar
+  - Im Browser Developer Tools (F12) → Network Tab prüfen
+  - Wenn API-Calls 404 oder HTML zurückgeben → Backend-URL prüfen
+
+Problem: CORS-Fehler
+Lösung:
+  - CORS ist bereits in app.py konfiguriert
+  - Falls Problem besteht: flask-cors neu installieren
+    pip install flask-cors==5.0.0
+
+Problem: Port 5000 bereits belegt
+Lösung:
+  - Anderen Port verwenden (z.B. 5001)
+  - In app.py Port ändern
+  - Frontend .env entsprechend anpassen
+
+
+EMPFEHLUNG FÜR IT:
+====================================
+
+Für erste Tests: OPTION 1 (Localhost)
+- Einfachste Installation
+- Backend serviert Frontend automatisch
+- Keine zusätzliche Konfiguration nötig
+
+Für Produktiv-Einsatz: OPTION 2 (Server)
+- Mehrere Benutzer können zugreifen
+- Zentrale Datenverwaltung
+- Erfordert Firewall-Konfiguration
+
+
+AKTUELLER FEHLER BEHEBEN:
+====================================
+
+Wenn Fehler "not valid JSON" erscheint:
+
+1. Backend prüfen:
+   cd C:\Temp\portfolio-conversion-tool\api
+   python app.py
+
+   Sollte zeigen:
+   * Running on http://localhost:5000
+
+2. Browser öffnen:
+   http://localhost:5000
+
+   NICHT: file:///C:/Temp/...index.html
+
+3. Falls immer noch Fehler:
+   Browser-Cache leeren (Strg+Shift+Delete)
+
+
+KONTAKT:
+====================================
+baumanng@syskomp-group.com

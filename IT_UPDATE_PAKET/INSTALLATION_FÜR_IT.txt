@@ -1,0 +1,77 @@
+====================================
+PORTFOLIO CONVERSION TOOL
+INSTALLATIONS-ANLEITUNG FÜR IT
+====================================
+
+WICHTIG: Das neue Paket enthält Fehlerbehebungen!
+Bitte das aktualisierte ZIP verwenden, nicht das alte.
+
+SYSTEMVORAUSSETZUNGEN:
+-------------------------------------
+1. Python 3.13 oder 3.14
+   Download: https://www.python.org/downloads/
+
+2. Node.js (aktuelle LTS-Version)
+   Download: https://nodejs.org/
+
+3. Windows 10/11 oder Windows Server
+
+
+INSTALLATION - SCHRITT FÜR SCHRITT:
+-------------------------------------
+
+1. ZIP-DATEI ENTPACKEN
+   - portfolio-conversion-tool.zip in gewünschtes Verzeichnis entpacken
+   - Empfohlen: C:\Tools\portfolio-conversion-tool
+
+2. DEPLOYMENT AUSFÜHREN
+   - Doppelklick auf: deploy.bat
+
+   Das Skript führt automatisch aus:
+   [1/5] Python-Abhängigkeiten installieren
+   [2/5] Node.js-Abhängigkeiten installieren
+   [3/5] Frontend kompilieren
+   [4/5] Dateien prüfen
+   [5/5] Abschluss
+
+3. BEI FEHLERN
+
+   Falls Fehler bei Pillow auftreten:
+   - PowerShell als Administrator öffnen
+   - Ausführen: pip install --upgrade pip
+   - Ausführen: pip install --only-binary=:all: Pillow
+   - deploy.bat erneut ausführen
+
+
+ANWENDUNG STARTEN:
+-------------------------------------
+
+Nach erfolgreicher Installation:
+
+1. Backend starten:
+   cd api
+   python app.py
+
+2. Browser öffnen:
+   http://localhost:5000
+
+
+WICHTIGE DATEIEN:
+-------------------------------------
+- Portfolio_Syskomp_pA.csv      (Hauptdaten)
+- ALVARIS_CATALOG/               (Katalog-Ordner)
+- ASK_CATALOG/                   (Katalog-Ordner)
+- api/requirements.txt           (Python-Pakete)
+- frontend/package.json          (Node-Pakete)
+
+
+BEHOBENE FEHLER IN DIESEM PAKET:
+-------------------------------------
+✓ Pillow-Kompatibilität mit Python 3.14 (Version 12.0.0)
+✓ Fehlende tsconfig.app.json wird jetzt mitkopiert
+✓ TypeScript Build-Fehler behoben
+
+
+SUPPORT:
+-------------------------------------
+Bei Problemen wenden Sie sich an: baumanng@syskomp-group.com
