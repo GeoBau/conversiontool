@@ -198,7 +198,7 @@ def get_validation_url(col: str, number: str) -> str:
         'E': f'https://www.boschrexroth.com/de/de/search.html?q={number}&origin=header',
         'F': f'https://www.alvaris.com/de/?s={number}&trp-form-language=de',
         'G': f'https://www.alvaris.com/de/?s={number}&trp-form-language=de',
-        'H': 'https://shop.askgmbh.com/auctores/scs/imc'
+        'H': 'https://askgmbh.com/auctores/scs/imc'
     }
     return urls.get(col)
 

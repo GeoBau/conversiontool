@@ -701,6 +701,7 @@ const PortfolioConversion = () => {
                       value={match.ask}
                       column="H"
                       onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'H', value)}
+                      linkUrl={match.ask && match.ask !== '-' ? 'https://askgmbh.com/auctores/scs/imc' : undefined}
                     />
                   </div>
                   {match.description && (

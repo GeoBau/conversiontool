@@ -71,7 +71,7 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
       window.open(`https://www.boschrexroth.com/de/de/search.html?q=${trimmed}&origin=header`, '_blank')
     } else if (column === 'H') {
       // ASK
-      window.open('https://shop.askgmbh.com/auctores/scs/imc', '_blank')
+      window.open('https://askgmbh.com/auctores/scs/imc', '_blank')
     }
 
     // Just open the URL, validation status doesn't need to change
