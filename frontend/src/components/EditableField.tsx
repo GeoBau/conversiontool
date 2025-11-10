@@ -37,17 +37,6 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
     return false
   }
 
-  // Check if Alvaris Matnr format is ready (for showing validation button)
-  const isAlvarisMatnrReady = () => {
-    const trimmed = inputValue.trim()
-    if (!trimmed) return false
-    // Alvaris Matnr: bis zu 10 Zeichen, muss Buchstaben enthalten
-    if (trimmed.length > 10) return false
-    // Muss mindestens einen Buchstaben enthalten
-    if (!/[A-Za-z]/.test(trimmed)) return false
-    return true
-  }
-
   const handleEdit = () => {
     setIsEditing(true)
     setInputValue('')
