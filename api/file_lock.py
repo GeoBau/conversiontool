@@ -182,6 +182,50 @@ class CSVManager:
         finally:
             self.lock.release()
 
+    def append_row(self, new_row: List[str]) -> Tuple[bool, str]:
+        """
+        Fügt eine neue Zeile an die CSV an
+
+        Args:
+            new_row: Neue Zeile mit 8 Werten (A-H)
+
+        Returns:
+            Tuple[bool, str]: (Erfolg, Nachricht)
+        """
+        acquired = self.lock.acquire(timeout=5)
+        if not acquired:
+            return False, "Datei momentan gesperrt. Bitte erneut versuchen."
+
+        try:
+            # Backup erstellen
+            backup_path = self.backup_manager.create_backup(self.csv_path)
+
+            # CSV lesen
+            rows = self.read_all()
+
+            # Neue Zeile anhängen
+            rows.append(new_row)
+
+            # Zurück in CSV schreiben
+            self.write_all(rows)
+
+            # Undo-Aktion speichern
+            self.undo_manager.add_action('append_row', {
+                'row_data': new_row,
+                'backup_path': backup_path
+            })
+
+            # Alte Backups aufräumen
+            self.backup_manager.cleanup_old_backups()
+
+            return True, "Neue Zeile erfolgreich hinzugefügt"
+
+        except Exception as e:
+            return False, f"Fehler: {str(e)}"
+
+        finally:
+            self.lock.release()
+
     def undo_last_action(self) -> Tuple[bool, str]:
         """Macht die letzte Aktion rückgängig (wenn < 3 Min alt)"""
         acquired = self.lock.acquire(timeout=5)
@@ -211,6 +255,22 @@ class CSVManager:
                 self.undo_manager.remove_last_action()
 
                 return True, f"Änderung rückgängig gemacht (zurück zu: '{data['old_value']}')"
+
+            elif last_action['type'] == 'append_row':
+                data = last_action['data']
+
+                # Letzte Zeile entfernen
+                rows = self.read_all()
+                if len(rows) > 1:  # Nicht nur Header
+                    rows.pop()
+                    self.write_all(rows)
+
+                    # Aktion aus History entfernen
+                    self.undo_manager.remove_last_action()
+
+                    return True, "Neue Zeile wurde entfernt"
+                else:
+                    return False, "Keine Zeile zum Entfernen gefunden"
 
             return False, "Aktion kann nicht rückgängig gemacht werden"
 

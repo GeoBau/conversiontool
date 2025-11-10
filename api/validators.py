@@ -53,9 +53,9 @@ def validate_bosch(number: str) -> Tuple[bool, str]:
     return True, "OK"
 
 
-def validate_alvaris(number: str) -> Tuple[bool, str]:
+def validate_alvaris_artnr(number: str) -> Tuple[bool, str]:
     """
-    Validiert Alvaris-Artikelnummer
+    Validiert Alvaris-Artikelnummer (Spalte F)
     Keine Sonderzeichen (nur Ziffern)
     Genau 7 Zeichen
     """
@@ -66,11 +66,38 @@ def validate_alvaris(number: str) -> Tuple[bool, str]:
 
     # Muss genau 7 Zeichen lang sein
     if len(number) != 7:
-        return False, "Alvaris-Nummer muss genau 7 Zeichen haben"
+        return False, "Alvaris Artnr muss genau 7 Zeichen haben"
 
     # Nur Zahlen erlaubt
     if not re.match(r'^\d+$', number):
         return False, "Nur Zahlen sind erlaubt"
+
+    return True, "OK"
+
+
+def validate_alvaris_matnr(number: str) -> Tuple[bool, str]:
+    """
+    Validiert Alvaris-Materialnummer (Spalte G)
+    Bis zu 10 Zeichen
+    Muss Buchstaben enthalten
+    Erlaubt: Buchstaben, Zahlen und Punkt
+    """
+    if not number or not number.strip():
+        return False, "Nummer darf nicht leer sein"
+
+    number = number.strip()
+
+    # Max. 10 Zeichen
+    if len(number) > 10:
+        return False, "Alvaris Matnr darf max. 10 Zeichen haben"
+
+    # Nur Buchstaben, Zahlen und Punkt erlaubt
+    if not re.match(r'^[A-Za-z0-9\.]+$', number):
+        return False, "Nur Buchstaben, Zahlen und Punkt sind erlaubt"
+
+    # Muss mindestens einen Buchstaben enthalten
+    if not re.search(r'[A-Za-z]', number):
+        return False, "Alvaris Matnr muss Buchstaben enthalten"
 
     return True, "OK"
 
@@ -106,8 +133,10 @@ def validate_generic(number: str, col: str) -> Tuple[bool, str]:
         return validate_item(number)
     elif col == 'E':  # Bosch
         return validate_bosch(number)
-    elif col in ['F', 'G']:  # Alvaris Artnr/Matnr
-        return validate_alvaris(number)
+    elif col == 'F':  # Alvaris Artnr
+        return validate_alvaris_artnr(number)
+    elif col == 'G':  # Alvaris Matnr
+        return validate_alvaris_matnr(number)
     elif col == 'H':  # ASK
         return validate_ask(number)
     else:
@@ -191,11 +220,19 @@ if __name__ == '__main__':
     print(f"  '12345' (Fehler - zu kurz): {validate_bosch('12345')}")
     print(f"  '12345678901' (Fehler - zu lang): {validate_bosch('12345678901')}")
 
-    # Alvaris Tests (genau 7 Zeichen, nur Zahlen)
-    print("\nAlvaris Tests (genau 7 Zeichen, nur Zahlen):")
-    print(f"  '1010072' (OK): {validate_alvaris('1010072')}")
-    print(f"  '123' (Fehler - zu kurz): {validate_alvaris('123')}")
-    print(f"  '123ABC4' (Fehler - Buchstaben): {validate_alvaris('123ABC4')}")
+    # Alvaris Artnr Tests (genau 7 Zeichen, nur Zahlen)
+    print("\nAlvaris Artnr Tests (genau 7 Zeichen, nur Zahlen):")
+    print(f"  '1010072' (OK): {validate_alvaris_artnr('1010072')}")
+    print(f"  '123' (Fehler - zu kurz): {validate_alvaris_artnr('123')}")
+    print(f"  '123ABC4' (Fehler - Buchstaben): {validate_alvaris_artnr('123ABC4')}")
+
+    # Alvaris Matnr Tests (bis zu 10 Zeichen, muss Buchstaben enthalten)
+    print("\nAlvaris Matnr Tests (bis zu 10 Zeichen, muss Buchstaben enthalten):")
+    print(f"  'ANTSTEP.60' (OK): {validate_alvaris_matnr('ANTSTEP.60')}")
+    print(f"  'ABC123' (OK): {validate_alvaris_matnr('ABC123')}")
+    print(f"  '1234567890' (Fehler - keine Buchstaben): {validate_alvaris_matnr('1234567890')}")
+    print(f"  'ABCDEFGHIJK' (Fehler - zu lang): {validate_alvaris_matnr('ABCDEFGHIJK')}")
+    print(f"  'ABC-123' (Fehler - Bindestrich nicht erlaubt): {validate_alvaris_matnr('ABC-123')}")
 
     # ASK Tests (genau 8 Zeichen, Zahlen)
     print("\nASK Tests (genau 8 Zeichen, nur Zahlen):")

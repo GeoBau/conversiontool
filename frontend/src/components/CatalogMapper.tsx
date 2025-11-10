@@ -13,6 +13,8 @@ interface CatalogProduct {
   Bild?: string
   URL?: string
   already_mapped?: boolean
+  mapped_syskomp_neu?: string
+  mapped_syskomp_alt?: string
 }
 
 interface PortfolioMatch {
@@ -41,7 +43,7 @@ const CatalogMapper = () => {
   // Matching
   const [matches, setMatches] = useState<PortfolioMatch[]>([])
   const [selectedMatch, setSelectedMatch] = useState<string>('')
-  const [filterType, setFilterType] = useState<'all' | 'item' | 'bosch'>('all')
+  const [filterType] = useState<'all' | 'item' | 'bosch'>('all')
   const [minSimilarity, setMinSimilarity] = useState(0)
   const [filterText, setFilterText] = useState('')
   const [matchLoading, setMatchLoading] = useState(false)
@@ -55,6 +57,13 @@ const CatalogMapper = () => {
   } | null>(null)
   const [canUndo, setCanUndo] = useState(false)
   const [justSaved, setJustSaved] = useState(false) // Track if we just saved
+
+  // Manual entry state
+  const [manualSyskompNeu, setManualSyskompNeu] = useState<string>('')
+  const [manualSyskompAlt, setManualSyskompAlt] = useState<string>('')
+  const [validationMessage, setValidationMessage] = useState<string>('')
+  const [isNewEntry, setIsNewEntry] = useState(false) // true = "Neuaufnahme", false = "Passt"
+  const [isManualEntryValid, setIsManualEntryValid] = useState(false) // true if manual entry is valid (either existing or new)
 
   // Fetch available catalogs on mount
   useEffect(() => {
@@ -71,6 +80,18 @@ const CatalogMapper = () => {
     }
     fetchCatalogs()
   }, [])
+
+  // Validate manual entries when neue Nummer has 9 digits (alt is optional)
+  useEffect(() => {
+    if (manualSyskompNeu.length === 9) {
+      // Validate with alt if provided, or empty string if not
+      validateAndCheckNumbers(manualSyskompNeu, manualSyskompAlt)
+    } else if (manualSyskompNeu || manualSyskompAlt) {
+      setValidationMessage('')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
+    }
+  }, [manualSyskompNeu, manualSyskompAlt])
 
   const handleLoadCatalog = async () => {
     if (!selectedCatalog) {
@@ -146,8 +167,75 @@ const CatalogMapper = () => {
     }
   }
 
+  const validateAndCheckNumbers = async (neu: string, alt: string) => {
+    // Validate format for neue Nummer (required)
+    if (neu.length !== 9 || !neu.startsWith('1') || !/^\d+$/.test(neu)) {
+      setValidationMessage('Syskomp neu: 9 Ziffern, beginnt mit 1')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
+      return
+    }
+
+    // Validate format for alte Nummer (optional, but if provided must be correct)
+    if (alt && (alt.length !== 9 || (!alt.startsWith('2') && !alt.startsWith('4')) || !/^\d+$/.test(alt))) {
+      setValidationMessage('Syskomp alt: 9 Ziffern, beginnt mit 2 oder 4')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
+      return
+    }
+
+    // Check if numbers exist via /api/search
+    try {
+      const neuResponse = await fetch(`${API_URL}/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number: neu })
+      })
+
+      const neuData = await neuResponse.json()
+      const neuExists = neuData.found
+
+      // Check if neue Nummer exists
+      if (neuExists) {
+        setValidationMessage('✓ Artikelnummer ist vorhanden')
+        setIsNewEntry(false)
+        setIsManualEntryValid(true) // Valid: existing number found
+        return
+      }
+
+      // If neue Nummer doesn't exist, check if alte Nummer exists (only if provided)
+      if (alt && alt.length === 9) {
+        const altResponse = await fetch(`${API_URL}/search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ number: alt })
+        })
+
+        const altData = await altResponse.json()
+        const altExists = altData.found
+
+        if (altExists) {
+          setValidationMessage('✗ Fehler: neue Artnr neu / alte ist vorhanden')
+          setIsNewEntry(false)
+          setIsManualEntryValid(false) // Invalid: error state
+          return
+        }
+      }
+
+      // Both don't exist (or alt not provided) → Neuaufnahme
+      setValidationMessage('→ Neue Artikelnummer (Neuaufnahme)')
+      setIsNewEntry(true)
+      setIsManualEntryValid(true) // Valid: new entry
+    } catch (err) {
+      console.error('Validation error:', err)
+      setValidationMessage('Fehler bei der Prüfung')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
+    }
+  }
+
   const handleSaveMapping = async () => {
-    if (!selectedMatch) {
+    if (!selectedMatch && !isManualEntryValid) {
       setError('Bitte eine Syskomp-Nummer auswählen')
       return
     }
@@ -158,8 +246,6 @@ const CatalogMapper = () => {
   }
 
   const actuallyPerformSave = async () => {
-    if (!selectedMatch) return
-
     const currentProduct = catalogProducts[currentIndex]
     if (!currentProduct) return
 
@@ -167,45 +253,104 @@ const CatalogMapper = () => {
     const catalogInfo = catalogs.find(c => c.path === selectedCatalog)
     const catalogType = catalogInfo?.type?.toLowerCase() || 'ask'
 
-    let col = 'H' // Default to ASK
-    if (catalogType === 'alvaris') col = 'F' // Alvaris Artnr
-    else if (catalogType === 'bosch') col = 'E'
-    else if (catalogType === 'item') col = 'D'
-
     try {
-      const response = await fetch(`${API_URL}/update-entry`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          syskomp_neu: selectedMatch,
-          col: col,
-          value: currentProduct.Artikelnummer
-        }),
-      })
+      if (isNewEntry) {
+        // Create new entry
+        const response = await fetch(`${API_URL}/create-entry`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            syskomp_neu: manualSyskompNeu,
+            syskomp_alt: manualSyskompAlt,
+            catalog_artnr: currentProduct.Artikelnummer,
+            description: currentProduct.Beschreibung,
+            catalog_type: catalogType
+          }),
+        })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Fehler beim Speichern')
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Fehler beim Erstellen')
+        }
+
+        // Mark product as already mapped in the local state and update Syskomp numbers
+        const updatedProducts = [...catalogProducts]
+        updatedProducts[currentIndex] = {
+          ...updatedProducts[currentIndex],
+          already_mapped: true,
+          mapped_syskomp_neu: manualSyskompNeu,
+          mapped_syskomp_alt: manualSyskompAlt || ''
+        }
+        setCatalogProducts(updatedProducts)
+
+        // Save for undo
+        setLastSavedMapping({
+          index: currentIndex,
+          artikelnummer: currentProduct.Artikelnummer,
+          syskompNummer: manualSyskompNeu
+        })
+        setCanUndo(true)
+        setError(null)
+      } else {
+        // Update existing entry (either from selectedMatch or manual entry)
+        const syskompNummer = selectedMatch || manualSyskompNeu
+        if (!syskompNummer) return
+
+        let col = 'H' // Default to ASK
+        if (catalogType === 'alvaris') col = 'F' // Alvaris Artnr
+        else if (catalogType === 'bosch') col = 'E'
+        else if (catalogType === 'item') col = 'D'
+
+        const response = await fetch(`${API_URL}/update-entry`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            syskomp_neu: syskompNummer,
+            col: col,
+            value: currentProduct.Artikelnummer
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Fehler beim Speichern')
+        }
+
+        // Mark product as already mapped in the local state and update Syskomp numbers
+        const updatedProducts = [...catalogProducts]
+
+        // Get the Syskomp alt number from the match or manual entry
+        let syskompAlt = ''
+        if (selectedMatch) {
+          // If selected from match list, find the corresponding alt number
+          const match = matches.find(m => m.syskomp_neu === selectedMatch)
+          syskompAlt = match?.syskomp_alt || ''
+        } else {
+          // If manual entry
+          syskompAlt = manualSyskompAlt || ''
+        }
+
+        updatedProducts[currentIndex] = {
+          ...updatedProducts[currentIndex],
+          already_mapped: true,
+          mapped_syskomp_neu: syskompNummer,
+          mapped_syskomp_alt: syskompAlt
+        }
+        setCatalogProducts(updatedProducts)
+
+        // Save for undo
+        setLastSavedMapping({
+          index: currentIndex,
+          artikelnummer: currentProduct.Artikelnummer,
+          syskompNummer: syskompNummer
+        })
+        setCanUndo(true)
+        setError(null)
       }
-
-      // Mark product as already mapped in the local state
-      const updatedProducts = [...catalogProducts]
-      updatedProducts[currentIndex] = {
-        ...updatedProducts[currentIndex],
-        already_mapped: true
-      }
-      setCatalogProducts(updatedProducts)
-
-      // Save for undo
-      setLastSavedMapping({
-        index: currentIndex,
-        artikelnummer: currentProduct.Artikelnummer,
-        syskompNummer: selectedMatch
-      })
-      setCanUndo(true)
-      setError(null)
     } catch (err: any) {
       setError(err.message || 'Fehler beim Speichern')
       throw err
@@ -214,7 +359,7 @@ const CatalogMapper = () => {
 
   const handleNext = async () => {
     // If "Passt" was clicked, save before navigating
-    if (justSaved && selectedMatch) {
+    if (justSaved && (selectedMatch || isManualEntryValid)) {
       try {
         await actuallyPerformSave()
         // After saving successfully, keep canUndo active
@@ -232,13 +377,19 @@ const CatalogMapper = () => {
       const nextIndex = currentIndex + 1
       setCurrentIndex(nextIndex)
       setSelectedMatch('')
+      // Clear manual inputs and reset validation when navigating
+      setManualSyskompNeu('')
+      setManualSyskompAlt('')
+      setValidationMessage('')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
       findMatches(catalogProducts[nextIndex].Beschreibung)
     }
   }
 
   const handlePrevious = async () => {
     // If "Passt" was clicked, save before navigating
-    if (justSaved && selectedMatch) {
+    if (justSaved && (selectedMatch || isManualEntryValid)) {
       try {
         await actuallyPerformSave()
         // After saving successfully, keep canUndo active
@@ -256,6 +407,12 @@ const CatalogMapper = () => {
       const prevIndex = currentIndex - 1
       setCurrentIndex(prevIndex)
       setSelectedMatch('')
+      // Clear manual inputs and reset validation when navigating
+      setManualSyskompNeu('')
+      setManualSyskompAlt('')
+      setValidationMessage('')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
       findMatches(catalogProducts[prevIndex].Beschreibung)
     }
   }
@@ -265,6 +422,11 @@ const CatalogMapper = () => {
     if (justSaved && !canUndo) {
       // Just clear the selection and reset states
       setSelectedMatch('')
+      setManualSyskompNeu('')
+      setManualSyskompAlt('')
+      setValidationMessage('')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
       setJustSaved(false)
       setError(null)
       return
@@ -290,6 +452,11 @@ const CatalogMapper = () => {
       // Go back to the saved mapping index
       setCurrentIndex(lastSavedMapping.index)
       setSelectedMatch('')
+      setManualSyskompNeu('')
+      setManualSyskompAlt('')
+      setValidationMessage('')
+      setIsNewEntry(false)
+      setIsManualEntryValid(false)
       findMatches(catalogProducts[lastSavedMapping.index].Beschreibung)
 
       // Disable undo after using it and reset saved state
@@ -418,7 +585,7 @@ const CatalogMapper = () => {
               {/* Text Filter */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: '1 1 200px' }}>
                 <label style={{ fontWeight: 'bold', fontSize: '10px', whiteSpace: 'nowrap' }}>
-                  Filtern von Beschreibung:
+                  Filtern bei Syskomp Beschreibung:
                 </label>
                 <input
                   type="text"
@@ -439,7 +606,19 @@ const CatalogMapper = () => {
 
               <div style={{ marginBottom: '15px' }}>
                 <strong>Art. Nr:</strong> <span style={{ color: currentProduct.already_mapped ? '#c62828' : 'inherit', fontWeight: currentProduct.already_mapped ? 'bold' : 'normal' }}>{currentProduct.Artikelnummer}</span>
-                {currentProduct.already_mapped && <span style={{ marginLeft: '8px', fontSize: '10px', color: '#c62828' }}>(bereits zugeordnet)</span>}
+                {currentProduct.already_mapped && (
+                  <div style={{ marginTop: '4px', fontSize: '10px', color: '#c62828' }}>
+                    <div>(bereits zugeordnet)</div>
+                    {currentProduct.mapped_syskomp_neu && (
+                      <div style={{ marginTop: '2px' }}>
+                        <strong>Syskomp neu:</strong> {currentProduct.mapped_syskomp_neu}
+                        {currentProduct.mapped_syskomp_alt && currentProduct.mapped_syskomp_alt !== '-' && (
+                          <span> / <strong>alt:</strong> {currentProduct.mapped_syskomp_alt}</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div style={{ marginBottom: '15px' }}>
@@ -477,43 +656,50 @@ const CatalogMapper = () => {
             {/* RIGHT COLUMN: Input Fields, Buttons, Matches */}
             <div>
               {/* Syskomp Input Fields */}
-              <div style={{ marginBottom: '8px', display: 'flex', gap: '8px', fontSize: '11px' }}>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '2px' }}>Syskomp neu:</label>
-                  <input
-                    type="text"
-                    value={selectedMatch}
-                    readOnly
-                    maxLength={10}
-                    style={{
-                      width: '100px',
-                      padding: '4px 6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      backgroundColor: '#f5f5f5',
-                      fontSize: '11px'
-                    }}
-                    placeholder="-"
-                  />
+              <div style={{ marginBottom: '8px' }}>
+                <div style={{ display: 'flex', gap: '8px', fontSize: '11px', marginBottom: '4px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '2px' }}>Syskomp neu:</label>
+                    <input
+                      type="text"
+                      value={manualSyskompNeu || selectedMatch}
+                      onChange={(e) => setManualSyskompNeu(e.target.value)}
+                      maxLength={9}
+                      style={{
+                        width: '100px',
+                        padding: '4px 6px',
+                        border: '1px solid #ccc',
+                        borderRadius: '3px',
+                        backgroundColor: 'white',
+                        fontSize: '11px'
+                      }}
+                      placeholder="1xxxxxxxx"
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '2px' }}>Syskomp alt:</label>
+                    <input
+                      type="text"
+                      value={manualSyskompAlt || matches.find(m => m.syskomp_neu === selectedMatch)?.syskomp_alt || ''}
+                      onChange={(e) => setManualSyskompAlt(e.target.value)}
+                      maxLength={9}
+                      style={{
+                        width: '100px',
+                        padding: '4px 6px',
+                        border: '1px solid #ccc',
+                        borderRadius: '3px',
+                        backgroundColor: 'white',
+                        fontSize: '11px'
+                      }}
+                      placeholder="2/4xxxxxxx"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '2px' }}>Syskomp alt:</label>
-                  <input
-                    type="text"
-                    value={matches.find(m => m.syskomp_neu === selectedMatch)?.syskomp_alt || ''}
-                    readOnly
-                    maxLength={10}
-                    style={{
-                      width: '100px',
-                      padding: '4px 6px',
-                      border: '1px solid #ccc',
-                      borderRadius: '3px',
-                      backgroundColor: '#f5f5f5',
-                      fontSize: '11px'
-                    }}
-                    placeholder="-"
-                  />
-                </div>
+                {validationMessage && (
+                  <div style={{ fontSize: '10px', color: validationMessage.includes('vorhanden') ? 'green' : 'red', marginTop: '2px' }}>
+                    {validationMessage}
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -521,19 +707,19 @@ const CatalogMapper = () => {
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={handleSaveMapping}
-                    disabled={!selectedMatch || justSaved}
+                    disabled={(!selectedMatch && !isManualEntryValid) || justSaved}
                     className="action-button"
                     style={{
                       flex: 2,
-                      backgroundColor: (selectedMatch && !justSaved) ? '#28a745' : '#ccc',
+                      backgroundColor: ((selectedMatch || isManualEntryValid) && !justSaved) ? '#28a745' : justSaved ? '#2196f3' : '#ccc',
                       color: 'white',
                       fontWeight: 'bold',
                       padding: '6px 10px',
                       fontSize: '11px',
-                      cursor: (selectedMatch && !justSaved) ? 'pointer' : 'not-allowed'
+                      cursor: ((selectedMatch || isManualEntryValid) && !justSaved) ? 'pointer' : 'not-allowed'
                     }}
                   >
-                    ✓ Passt
+                    {isNewEntry ? '✓ Neuaufnahme' : (justSaved ? 'Passt bestätigt' : 'Passt ?')}
                   </button>
                   <button onClick={handlePrevious} disabled={currentIndex === 0} style={{ flex: 1, padding: '4px 6px', fontSize: '10px' }}>
                     ◀ Zurück
@@ -580,9 +766,14 @@ const CatalogMapper = () => {
                           key={idx}
                           onClick={() => {
                             setSelectedMatch(match.syskomp_neu)
-                            // When a new match is clicked, reset states
+                            // When a new match is clicked, reset states and clear manual inputs
                             setJustSaved(false)
                             setCanUndo(false)
+                            setManualSyskompNeu('')
+                            setManualSyskompAlt('')
+                            setValidationMessage('')
+                            setIsNewEntry(false)
+                            setIsManualEntryValid(false)
                           }}
                           style={{
                             padding: '4px 6px',

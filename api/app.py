@@ -490,6 +490,137 @@ def undo_last():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/create-entry', methods=['POST'])
+def create_entry():
+    """Erstellt einen neuen Eintrag in der Portfolio CSV (Neuaufnahme)"""
+    try:
+        req_data = request.json
+        syskomp_neu = req_data.get('syskomp_neu', '').strip()
+        syskomp_alt = req_data.get('syskomp_alt', '').strip()
+        catalog_artnr = req_data.get('catalog_artnr', '').strip()
+        description = req_data.get('description', '').strip()
+        catalog_type = req_data.get('catalog_type', '').lower()  # 'alvaris', 'bosch', 'item', 'ask'
+
+        if not syskomp_neu or not catalog_artnr:
+            return jsonify({'error': 'Syskomp neu und Katalog-Artikelnummer erforderlich'}), 400
+
+        # Validiere Format für Syskomp neu (erforderlich)
+        if len(syskomp_neu) != 9 or not syskomp_neu.startswith('1') or not syskomp_neu.isdigit():
+            return jsonify({'error': 'Syskomp neu: 9 Ziffern, beginnt mit 1'}), 400
+
+        # Validiere Format für Syskomp alt (optional, aber wenn ausgefüllt muss es korrekt sein)
+        if syskomp_alt:
+            if len(syskomp_alt) != 9 or (not syskomp_alt.startswith('2') and not syskomp_alt.startswith('4')) or not syskomp_alt.isdigit():
+                return jsonify({'error': 'Syskomp alt: 9 Ziffern, beginnt mit 2 oder 4'}), 400
+
+        # Bestimme die richtige Spalte basierend auf Katalog-Typ
+        col_index_map = {
+            'alvaris': 5,  # Column F (AlvarisArtnr)
+            'bosch': 4,    # Column E
+            'item': 3,     # Column D
+            'ask': 7       # Column H
+        }
+
+        catalog_col_index = col_index_map.get(catalog_type, 7)  # Default to ASK (H)
+
+        # Lese die CSV und füge neue Zeile hinzu
+        csv_path = os.path.join(base_dir, 'Portfolio_Syskomp_pA.csv')
+
+        # Neue Zeile erstellen (8 Spalten: A-H)
+        new_row = [''] * 8
+        new_row[0] = syskomp_neu  # Column A
+        new_row[1] = syskomp_alt  # Column B
+        new_row[2] = description  # Column C
+        new_row[catalog_col_index] = catalog_artnr  # Katalog-Nummer in richtige Spalte
+
+        # CSV aktualisieren
+        success, message = csv_manager.append_row(new_row)
+
+        if not success:
+            return jsonify({'error': message}), 500
+
+        # Daten neu laden
+        load_data()
+
+        return jsonify({
+            'success': True,
+            'message': 'Neuer Eintrag erfolgreich erstellt',
+            'syskomp_neu': syskomp_neu,
+            'syskomp_alt': syskomp_alt,
+            'catalog_artnr': catalog_artnr,
+            'description': description
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update-catalog-artikelnr', methods=['POST'])
+def update_catalog_artikelnr():
+    """Aktualisiert eine Artikelnummer in einer Katalog-CSV-Datei"""
+    try:
+        req_data = request.json
+        catalog_type = req_data.get('catalog_type', '').lower()
+        old_artikelnr = req_data.get('old_artikelnr', '').strip()
+        new_artikelnr = req_data.get('new_artikelnr', '').strip()
+
+        if not catalog_type or not old_artikelnr or not new_artikelnr:
+            return jsonify({'error': 'Katalogtyp, alte und neue Artikelnummer erforderlich'}), 400
+
+        # Katalog-Verzeichnis bestimmen
+        if catalog_type == 'alvaris':
+            catalog_dir = os.path.join(base_dir, "ALVARIS_CATALOG")
+        elif catalog_type == 'bosch':
+            catalog_dir = os.path.join(base_dir, "BOSCH_CATALOG")
+        elif catalog_type == 'item':
+            catalog_dir = os.path.join(base_dir, "ITEM_CATALOG")
+        elif catalog_type == 'ask':
+            catalog_dir = os.path.join(base_dir, "ASK_CATALOG")
+        else:
+            return jsonify({'error': f'Unbekannter Katalogtyp: {catalog_type}'}), 400
+
+        if not os.path.exists(catalog_dir):
+            return jsonify({'error': f'Katalog-Verzeichnis nicht gefunden: {catalog_dir}'}), 404
+
+        # Finde die CSV-Datei im Katalog-Verzeichnis
+        csv_files = [f for f in os.listdir(catalog_dir) if f.endswith('.csv')]
+        if not csv_files:
+            return jsonify({'error': f'Keine CSV-Datei im Katalog-Verzeichnis gefunden'}), 404
+
+        # Verwende die erste gefundene CSV
+        catalog_file = os.path.join(catalog_dir, csv_files[0])
+
+        # CSV lesen und Artikelnummer aktualisieren
+        updated = False
+        rows = []
+
+        with open(catalog_file, 'r', encoding='utf-8-sig', newline='') as f:
+            reader = csv.reader(f, delimiter=';')
+            for row in reader:
+                if len(row) > 0 and row[0] == old_artikelnr:
+                    # Artikelnummer in der ersten Spalte aktualisieren
+                    row[0] = new_artikelnr
+                    updated = True
+                rows.append(row)
+
+        if not updated:
+            return jsonify({'error': f'Artikelnummer {old_artikelnr} nicht gefunden'}), 404
+
+        # CSV zurückschreiben
+        with open(catalog_file, 'w', encoding='utf-8-sig', newline='') as f:
+            writer = csv.writer(f, delimiter=';', quoting=csv.QUOTE_MINIMAL)
+            writer.writerows(rows)
+
+        return jsonify({
+            'success': True,
+            'message': f'Artikelnummer erfolgreich aktualisiert',
+            'old_artikelnr': old_artikelnr,
+            'new_artikelnr': new_artikelnr,
+            'catalog_file': catalog_file
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/scan-catalogs', methods=['GET'])
 def scan_catalogs():
     """Scannt nach Katalog-CSV-Dateien in verschiedenen Verzeichnissen"""
@@ -549,28 +680,46 @@ def load_catalog():
         # Determine catalog type and check appropriate columns
         is_alvaris = 'ALVARIS' in parent_dir.upper() or 'alvaris' in catalog_name.lower()
 
-        # Check which article numbers already exist in Portfolio CSV
-        existing_numbers = set()
+        # Check which article numbers already exist in Portfolio CSV and store their Syskomp numbers
+        existing_numbers = {}  # {artikelnummer: {'syskomp_neu': ..., 'syskomp_alt': ...}}
         portfolio_path = os.path.join(os.path.dirname(__file__), '..', 'Portfolio_Syskomp_pA.csv')
         if os.path.exists(portfolio_path):
             with open(portfolio_path, 'r', encoding='utf-8') as pf:
                 portfolio_reader = csv.reader(pf, delimiter=';')
+                next(portfolio_reader, None)  # Skip header
                 for row in portfolio_reader:
+                    syskomp_neu = row[0].strip() if len(row) > 0 else ''
+                    syskomp_alt = row[1].strip() if len(row) > 1 else ''
+
                     if is_alvaris:
                         # Alvaris: Check column F (AlvarisArtnr, index 5) and G (AlvarisMatnr, index 6)
                         if len(row) > 5 and row[5]:
-                            existing_numbers.add(row[5].strip())
+                            existing_numbers[row[5].strip()] = {
+                                'syskomp_neu': syskomp_neu,
+                                'syskomp_alt': syskomp_alt
+                            }
                         if len(row) > 6 and row[6]:
-                            existing_numbers.add(row[6].strip())
+                            existing_numbers[row[6].strip()] = {
+                                'syskomp_neu': syskomp_neu,
+                                'syskomp_alt': syskomp_alt
+                            }
                     else:
                         # ASK: Check column H (index 7)
                         if len(row) > 7 and row[7]:
-                            existing_numbers.add(row[7].strip())
+                            existing_numbers[row[7].strip()] = {
+                                'syskomp_neu': syskomp_neu,
+                                'syskomp_alt': syskomp_alt
+                            }
 
-        # Mark products that already exist
+        # Mark products that already exist and add Syskomp numbers
         for product in products:
             art_nr = product.get('Artikelnummer', '').strip()
-            product['already_mapped'] = art_nr in existing_numbers
+            if art_nr in existing_numbers:
+                product['already_mapped'] = True
+                product['mapped_syskomp_neu'] = existing_numbers[art_nr]['syskomp_neu']
+                product['mapped_syskomp_alt'] = existing_numbers[art_nr]['syskomp_alt']
+            else:
+                product['already_mapped'] = False
 
         return jsonify({
             'success': True,

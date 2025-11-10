@@ -37,6 +37,17 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
     return false
   }
 
+  // Check if Alvaris Matnr format is ready (for showing validation button)
+  const isAlvarisMatnrReady = () => {
+    const trimmed = inputValue.trim()
+    if (!trimmed) return false
+    // Alvaris Matnr: bis zu 10 Zeichen, muss Buchstaben enthalten
+    if (trimmed.length > 10) return false
+    // Muss mindestens einen Buchstaben enthalten
+    if (!/[A-Za-z]/.test(trimmed)) return false
+    return true
+  }
+
   const handleEdit = () => {
     setIsEditing(true)
     setInputValue('')
@@ -108,7 +119,7 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
 
   const handleSave = async () => {
     // For Bosch/ASK: allow saving if format is correct (manual test ready)
-    // For Item/Alvaris: require validation status 'valid'
+    // For Item/Alvaris Artnr/Alvaris Matnr: require validation status 'valid'
     if (column === 'E' || column === 'H') {
       if (!isManualTestReady()) {
         setError('Bitte korrekte Anzahl Ziffern eingeben')
@@ -139,7 +150,7 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       // For Bosch/ASK: allow Enter if format is correct
-      // For Item/Alvaris: require validation status 'valid'
+      // For Item/Alvaris Artnr/Alvaris Matnr: require validation status 'valid'
       if ((column === 'E' || column === 'H') ? isManualTestReady() : validationStatus === 'valid') {
         handleSave()
       }
@@ -155,20 +166,28 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
         {!isEditing ? (
           <>
             {!isEmpty ? (
-              linkUrl ? (
-                <a
-                  href={linkUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="number-link"
+              <>
+                {linkUrl ? (
+                  <a
+                    href={linkUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="number-link"
+                  >
+                    {value}
+                  </a>
+                ) : (
+                  <span>{value}</span>
+                )}
+                <button
+                  onClick={handleEdit}
+                  className="add-button"
+                  title="Nummer ändern"
                 >
-                  {value}
-                </a>
-              ) : (
-                <span>{value}</span>
-              )
-            ) : null}
-            {isEmpty && column !== 'G' && (
+                  Ändern
+                </button>
+              </>
+            ) : (
               <button
                 onClick={handleEdit}
                 className="add-button"

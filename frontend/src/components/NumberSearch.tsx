@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import './NumberSearch.css'
+import './ConversionTool.css' // For add-button styles
 
 interface SearchResult {
   input_number: string
@@ -27,10 +28,15 @@ interface ApiResponse {
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 const NumberSearch = () => {
+  // Edit functionality for catalog numbers (item, bosch, alvaris)
   const [searchNumber, setSearchNumber] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ApiResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // Edit state for catalog numbers
+  const [editingNumber, setEditingNumber] = useState<string | null>(null)
+  const [editedValue, setEditedValue] = useState('')
 
   const getSystemLabel = (type: string) => {
     switch (type) {
@@ -87,6 +93,143 @@ const NumberSearch = () => {
     }
   }
 
+  const handleEditNumber = (number: string, type: string) => {
+    // Only allow editing for item, bosch, alvaris (not syskomp)
+    if (type === 'syskomp') {
+      setError('Syskomp-Nummern können nicht bearbeitet werden')
+      return
+    }
+    setEditingNumber(number)
+    setEditedValue(number)
+    setError(null)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingNumber(null)
+    setEditedValue('')
+  }
+
+  const handleSaveEdit = async (oldNumber: string, type: string) => {
+    if (!editedValue.trim()) {
+      setError('Artikelnummer darf nicht leer sein')
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/update-catalog-artikelnr`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          catalog_type: type,
+          old_artikelnr: oldNumber,
+          new_artikelnr: editedValue.trim()
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Fehler beim Speichern')
+      }
+
+      // Update local state
+      if (result && result.result) {
+        const updatedResult = { ...result }
+        if (updatedResult.result?.input_number === oldNumber) {
+          updatedResult.result.input_number = editedValue.trim()
+        }
+        if (updatedResult.result?.corresponding_number === oldNumber) {
+          updatedResult.result.corresponding_number = editedValue.trim()
+        }
+        setResult(updatedResult)
+      } else if (result && result.results) {
+        const updatedResult = { ...result }
+        updatedResult.results = updatedResult.results?.map(item => ({
+          ...item,
+          input_number: item.input_number === oldNumber ? editedValue.trim() : item.input_number,
+          corresponding_number: item.corresponding_number === oldNumber ? editedValue.trim() : item.corresponding_number
+        }))
+        setResult(updatedResult)
+      }
+
+      setEditingNumber(null)
+      setEditedValue('')
+      setError(null)
+    } catch (err: any) {
+      setError(err.message || 'Fehler beim Speichern der Artikelnummer')
+    }
+  }
+
+  const renderEditableNumber = (number: string, type: string) => {
+    const isEditing = editingNumber === number
+    const canEdit = type !== 'syskomp'
+
+    console.log('renderEditableNumber called:', { number, type, canEdit })
+
+    if (isEditing) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <input
+            type="text"
+            value={editedValue}
+            onChange={(e) => setEditedValue(e.target.value)}
+            style={{
+              padding: '4px 8px',
+              border: '1px solid #ccc',
+              borderRadius: '3px',
+              fontSize: '14px',
+              width: '150px'
+            }}
+          />
+          <button
+            onClick={() => handleSaveEdit(number, type)}
+            style={{
+              padding: '4px 10px',
+              fontSize: '11px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer'
+            }}
+          >
+            Speichern
+          </button>
+          <button
+            onClick={handleCancelEdit}
+            style={{
+              padding: '4px 10px',
+              fontSize: '11px',
+              backgroundColor: '#dc3545',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer'
+            }}
+          >
+            Abbrechen
+          </button>
+        </div>
+      )
+    }
+
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <span className="number">{number}</span>
+        {canEdit && (
+          <button
+            onClick={() => handleEditNumber(number, type)}
+            className="add-button"
+            title="Nummer ändern"
+          >
+            Ändern
+          </button>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="number-search">
       <div className="search-box">
@@ -128,7 +271,7 @@ const NumberSearch = () => {
             <div className="result-item input">
               <label>Eingabe</label>
               <div className="number-display">
-                <span className="number">{result.result.input_number}</span>
+                {renderEditableNumber(result.result.input_number, result.result.input_type)}
                 <span className="system-badge">{getSystemLabel(result.result.input_type)}</span>
               </div>
             </div>
@@ -136,7 +279,7 @@ const NumberSearch = () => {
             <div className="result-item output">
               <label>Entsprechung</label>
               <div className="number-display">
-                <span className="number">{result.result.corresponding_number}</span>
+                {renderEditableNumber(result.result.corresponding_number, result.result.corresponding_type)}
                 <span className="system-badge">{getSystemLabel(result.result.corresponding_type)}</span>
               </div>
             </div>
@@ -174,7 +317,7 @@ const NumberSearch = () => {
                   <div className="result-item input">
                     <label>Eingabe</label>
                     <div className="number-display">
-                      <span className="number">{item.input_number}</span>
+                      {renderEditableNumber(item.input_number, item.input_type)}
                       <span className="system-badge">{getSystemLabel(item.input_type)}</span>
                     </div>
                   </div>
@@ -182,7 +325,7 @@ const NumberSearch = () => {
                   <div className="result-item output">
                     <label>Entsprechung</label>
                     <div className="number-display">
-                      <span className="number">{item.corresponding_number}</span>
+                      {renderEditableNumber(item.corresponding_number, item.corresponding_type)}
                       <span className="system-badge">{getSystemLabel(item.corresponding_type)}</span>
                     </div>
                   </div>
