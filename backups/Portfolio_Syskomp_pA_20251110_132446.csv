@@ -1155,7 +1155,7 @@
 120000938;281804901;"Aluminiumprofil 80x40E;Nut 8;;";0.0.452.39;;-;-;
 120000939;281804911;"Aluminiumprofil 80x40L;Nut 8;;";0.0.452.41;;-;-;
 120000940;281804921;"Aluminiumprofil 80x40;Nut 8;;";0.0.452.94;;-;-;
-120000941;281804931;"Aluminiumprofil 80x40L 2N;Nut 8;;";0.0.452.97;;1010418;-;
+120000941;281804931;"Aluminiumprofil 80x40L 2N;Nut 8;;";0.0.452.97;;-;-;
 120000942;281804941;"Aluminiumprofil 80x40E 3N90;Nut 8;;";0.0.452.99;;-;-;
 120000943;281804951;"Aluminiumprofil 80x40E 2N180;Nut 8;;";0.0.452.98;;-;-;
 120000944;281804961;"Aluminiumprofil 80x40L 1N;Nut 8;;";0.0.607.26;;-;-;
@@ -1451,7 +1451,7 @@
 120001261;;"Aluminiumprofil 152x20;Nut 8;4 St. x 6000mm;";;;;;
 120001262;;"Aluminiumprofil 55x20;Nut 8;;";;;;;
 120001263;;"Aluminiumprofil 55x20;Nut 8;4 St. x 6000mm;";;;;;
-120001264;;"Klemmprofil 30x30 180°;Nut 6;;";;;1010415;;
+120001264;;"Klemmprofil 30x30 180°;Nut 6;;";;;;;
 120001265;;"Klemmprofil 30x30 180°;Nut 6;8 St. x 6000mm;";;;;;
 120001266;;"Schiebetuerprofil 40x10;Nut 8;;";;;;;
 120001267;;"Schiebetuerprofil 40x10;Nut 8;10 St. x 3000mm;";;;;;

@@ -818,7 +818,7 @@
 120000367;251010001;"Scheibendichtung Nut 5 Schwarz;Material: Kunststoff TPE;Abnahmemeng: pro Meter;Bestellmenge am Stück: Max.";0.0.437.12;;-;-;
 120000368;251201000;"Aluminiumprofil 20x10;Nut 5;16 St. x 3000mm;";0.0.391.02;;1010404;PRO5.2010;
 120000372;251201901;"Aluminiumprofil 20x10;Nut 5;;";0.0.448.03;;-;-;
-120000373;251202000;"Aluminiumprofil 20x20;Nut 5;16 St. x 3000mm;";0.0.370.03;;1010405;PRO;
+120000373;251202000;"Aluminiumprofil 20x20;Nut 5;16 St. x 3000mm;";0.0.370.03;;1010405;PRO;20201003
 120000377;251202010;"Aluminiumprofil 20x20 1N;Nut 5;16 St. x 3000mm;";0.0.437.74;;1010406;PRO5.20201N;
 120000381;251202020;"Aluminiumprofil 20x20 2N90;Nut 5;16 St. x 3000mm;";0.0.437.66;;1010407;PRO5.20202N90;
 120000385;251202030;"Aluminiumprofil 20x20 3N;Nut 5;16 St. x 3000mm;";0.0.464.83;;-;-;
@@ -826,7 +826,7 @@
 120000393;251202901;"Aluminiumprofil 20x20;Nut 5;;";0.0.448.04;;-;-;
 120000394;251202911;"Aluminiumprofil 20x20 1N;Nut 5;;";0.0.437.99;;-;-;
 120000395;251202921;"Aluminiumprofil 20x20 2N90;Nut 5;;";0.0.464.01;;-;-;
-120000396;251202931;"Aluminiumprofil 20x20 3N;Nut 5;;";0.0.448.33;;-;-;
+120000396;251202931;"Aluminiumprofil 20x20 3N;Nut 5;;";0.0.448.33;;1010411;-;
 120000397;251202991;"Aluminiumprofil R20 90°;Nut 5;;";0.0.448.19;;-;-;
 120000398;251401000;"Aluminiumprofil 40x10;Nut 5;16 St. x 3000mm;";0.0.391.06;;1010408;PRO5.4010;
 120000402;251401099;"Aluminiumprofil 40x10;Nut 5;;";0.0.448.06;;-;-;
@@ -1362,7 +1362,7 @@
 120001166;282800150;"Laufrolle D14~; St, 100 CR 6,;gehärtet geschliffen,;zweireihig kugelgelagert mit;zwei Deckscheiben,";0.0.294.52;;-;-;
 120001167;282800151;"Bolzen 8 D14 zentrisch;Material: stahl verzinkt;;";0.0.294.10;;-;-;
 120001168;282800152;"Bolzen 8 D14 exzentrisch;Material: stahl verzinkt;;";0.0.294.12;;-;-;
-120001169;282800200;"Wellenklemmprofil 8 D14;;10 St. x 3000mm;";0.0.453.68;;-;-;
+120001169;282800200;"Wellenklemmprofil 8 D14;;10 St. x 3000mm;";0.0.453.68;;-;-;20100103
 120001173;282899200;"Wellenklemmprofil 8 D14;;;";0.0.453.68;;-;-;
 120001174;283500500;"Bodenplattte 8 160 Al,;eloxiert natur 2 Abdeckkappen;8 160x28 3 Gewindestifte DIN;915 M10x30, St. blank 3";0.0.026.17;;-;-;
 120001175;283500501;"Bodenplatte 8 280 Al, eloxiert;natur 2 Abdeckkappen 8 160x28;;";0.0.388.69;;-;-;
@@ -1451,7 +1451,7 @@
 120001261;;"Aluminiumprofil 152x20;Nut 8;4 St. x 6000mm;";;;;;
 120001262;;"Aluminiumprofil 55x20;Nut 8;;";;;;;
 120001263;;"Aluminiumprofil 55x20;Nut 8;4 St. x 6000mm;";;;;;
-120001264;;"Klemmprofil 30x30 180°;Nut 6;;";;;;;
+120001264;;"Klemmprofil 30x30 180°;Nut 6;;";;;1010415;;
 120001265;;"Klemmprofil 30x30 180°;Nut 6;8 St. x 6000mm;";;;;;
 120001266;;"Schiebetuerprofil 40x10;Nut 8;;";;;;;
 120001267;;"Schiebetuerprofil 40x10;Nut 8;10 St. x 3000mm;";;;;;
@@ -1483,7 +1483,7 @@
 140000018;402519565;"Schutzscheibenprofil Nut 8 /;10 Länge: 2000mm;;";;;;;
 140000019;402519567;"Clipleiste;Schutzscheibenprofil Länge:;2000mm;";;;;;
 140000020;402523308;"Klemmelement WG30 WG40;;;";;3842523308;;;
-140000021;402523530;"Winkel 30x30 Nut 8/10 inkl.;Befestigung ESD Material :;Winkel Aluminiumdruckguss;blank Befestigung: stahl";;3842523530;;;
+140000021;402523530;"Winkel 30x30 Nut 8/10 inkl.;Befestigung ESD Material :;Winkel Aluminiumdruckguss;blank Befestigung: stahl";;3842523530;;;321041
 140000022;402523537;"Zwischenstück Nut 10 Material:;PA, schwarz;;";;3842523537;;;
 140000023;402523551;"Winkel 60x60~; inkl.;Befestigung, Nut8/10 ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523551;;;
 140000024;402524153;"Laufwagen für Schiebetür~; LE01;Material: Kunststoff PA;schwarz;";;3842524153;;;
@@ -1586,39 +1586,39 @@
 140000139;411146008;"Abdeckprofil~; Nut 10~; natur;Länge 2000 mm~; Material PP;;";;;;;
 140000140;411146901;"Abdeckprofil~; Nut10~; Schwarz,;RAL 9005 Länge 2000 mm~;;Material PP;";;;;;
 140000141;411191094;"Abdeckkappe 45x60 mit Loch,;Nut 10, schwarz, t=4 mm,;Material: PA;glasfaserverstärkt";;;;;
-140000142;411459000;"Aluminiumprofil 45x90L 4N;Nut 10;12 St. x 6000mm;";;;;;
-140000146;411459099;"Aluminiumprofil 45x90L 4N;Nut 10;;";;;;;
+140000142;411459000;"Aluminiumprofil 45x90L 4N;Nut 10;12 St. x 6000mm;";;;;;20106061
+140000146;411459099;"Aluminiumprofil 45x90L 4N;Nut 10;;";;;;;20106060
 140000147;411501577;"Abdeckkappe 22,5x45, Nut 10,;schwarz, t=4 mm, Material: PA;glasfaserverstärkt;";;;;;
 140000148;411502674;"Abdeckkappe 45x45, Nut 10,;schwarz t=4,0 mm~; Material: PA;glasfaserverst.;";;;;;
-140000149;411506956;"Aluminiumprofil 45x45L 1N;Nut 10;20 St. x 6000mm;";;3842557222;;;
-140000153;411506957;"Aluminiumprofil 45x45L 2NVS;Nut 10;20 St. x 6000mm;";;3842557223;;;
-140000157;411506958;"Aluminiumprofil 45x45L 2N;Nut 10;20 St. x 6000mm;";;3842557224;;;
-140000161;411506959;"Aluminiumprofil 45x45L 3N;Nut 10;20 St. x 6000mm;";;3842557225;;;
-140000165;411508102;"Rahmenprofil 22,5x45;Nut 10;20 St. x 6000mm;";;3842557941;;;
-140000169;411509175;"Aluminiumprofil 45x45;Nut 10;20 St. x 6000mm;";;3842553614;;;
+140000149;411506956;"Aluminiumprofil 45x45L 1N;Nut 10;20 St. x 6000mm;";;3842557222;;;20102011
+140000153;411506957;"Aluminiumprofil 45x45L 2NVS;Nut 10;20 St. x 6000mm;";;3842557223;;;20102021
+140000157;411506958;"Aluminiumprofil 45x45L 2N;Nut 10;20 St. x 6000mm;";;3842557224;;;20102041
+140000161;411506959;"Aluminiumprofil 45x45L 3N;Nut 10;20 St. x 6000mm;";;3842557225;;;20102031
+140000165;411508102;"Rahmenprofil 22,5x45;Nut 10;20 St. x 6000mm;";;3842557941;;;20102901
+140000169;411509175;"Aluminiumprofil 45x45;Nut 10;20 St. x 6000mm;";;3842553614;;;20103001
 140000173;411509177;"Schiebetürprofil AL45;Nut 10;20 St. x 6000mm;";;3842557943;;;
-140000177;411509179;"Aluminiumprofil 22,5x180;Nut 10/8;6 St. x 6000mm;";;3842557944;;;
-140000181;411509183;"Aluminiumprofil 60x90;Nut 10;10 St. x 6000mm;";;3842557207;;;
-140000185;411509184;"Aluminiumprofil 45x60;Nut 10;20 St. x 6000mm;";;3842557200;;;
-140000189;411509185;"Aluminiumprofil 60x60;Nut 10;20 St. x 6000mm;";;3842557202;;;
-140000193;411509186;"Aluminiumprofil 45x90;Nut 10;12 St. x 6000mm;";;3842553615;;;
-140000197;411509187;"Aluminiumprofil 45x180;Nut 10;6 St. x 6000mm;";;3842553616;;;
-140000201;411509188;"Aluminiumprofil 90x180;Nut 10;3 St. x 6000mm;";;3842553617;;;
-140000205;411509189;"Aluminiumprofil 90x90;Nut 10;6 St. x 6000mm;";;3842557201;;;
-140000209;411509600;"Aluminiumprofil 90x90L 6N;Nut 10;6 St. x 6000mm;";;;;;
-140000213;411509658;"Aluminiumprofil 90x90L;Nut 10;6 St. x 6000mm;";;3842553613;;;
-140000217;411511702;"Aluminiumprofil 45x45L;Nut 10;20 St. x 6000mm;";;3842553611;;;
-140000221;411511782;"Aluminiumprofil 45x90L;Nut 10;12 St. x 6000mm;";;3842553612;;;
+140000177;411509179;"Aluminiumprofil 22,5x180;Nut 10/8;6 St. x 6000mm;";;3842557944;;;20102801
+140000181;411509183;"Aluminiumprofil 60x90;Nut 10;10 St. x 6000mm;";;3842557207;;;20107501
+140000185;411509184;"Aluminiumprofil 45x60;Nut 10;20 St. x 6000mm;";;3842557200;;;20104001
+140000189;411509185;"Aluminiumprofil 60x60;Nut 10;20 St. x 6000mm;";;3842557202;;;20105101
+140000193;411509186;"Aluminiumprofil 45x90;Nut 10;12 St. x 6000mm;";;3842553615;;;20107001
+140000197;411509187;"Aluminiumprofil 45x180;Nut 10;6 St. x 6000mm;";;3842553616;;;20107201
+140000201;411509188;"Aluminiumprofil 90x180;Nut 10;3 St. x 6000mm;";;3842553617;;;20109501
+140000205;411509189;"Aluminiumprofil 90x90;Nut 10;6 St. x 6000mm;";;3842557201;;;20109001
+140000209;411509600;"Aluminiumprofil 90x90L 6N;Nut 10;6 St. x 6000mm;";;;;;20108061
+140000213;411509658;"Aluminiumprofil 90x90L;Nut 10;6 St. x 6000mm;";;3842553613;;;20108001
+140000217;411511702;"Aluminiumprofil 45x45L;Nut 10;20 St. x 6000mm;";;3842553611;;;20102001
+140000221;411511782;"Aluminiumprofil 45x90L;Nut 10;12 St. x 6000mm;";;3842553612;;;20106001
 140000225;411511783;"Abdeckkappe 45x90, Nut 10,;schwarz, t=4 mm, Material: PA;glasfaserverstärkt;";;;;;
-140000226;411511872;"Aluminiumprofil 60x60L;Nut 10;20 St. x 6000mm;";;3842557204;;;
+140000226;411511872;"Aluminiumprofil 60x60L;Nut 10;20 St. x 6000mm;";;3842557204;;;20105001
 140000230;411511874;"Abdeckkappe 60x60, Nut 10,;schwarz, t=4 mm, Material: PA;glasfaserverstärkt;";;3842548809;;;
-140000231;411513576;"Aluminiumprofil 15x22,5;Nut 10;10 St. x 3000mm;";;3842513576;;;
-140000235;411516015;"Aluminiumprofil 90x180L;Nut 10;3 St. x 6000mm;";;3842557226;;;
+140000231;411513576;"Aluminiumprofil 15x22,5;Nut 10;10 St. x 3000mm;";;3842513576;;;20102701
+140000235;411516015;"Aluminiumprofil 90x180L;Nut 10;3 St. x 6000mm;";;3842557226;;;20109401
 140000239;411516214;"Abdeckkappe 90x90L, Nut 10,;schwarz, t=4 mm, Material: PA;glasfaserverstärkt;";;;;;
 140000240;411517058;"Abdeckkappe 45x45, Nut 10,;schwarz, ESD t=4 mm, Material:;PA glasfaserverstärkt;";;3842548753;;;
 140000241;411517059;"Abdeckkappe 45x45, Nut 10,;lichtgrau RAL7035, t=4 mm, PA;glasfaserverstärkt;";;;;;
 140000242;411517100;"Abdeckkappe 40x40, Nut 10,;schwarz, ESD, t=4 mm,;Material: PA;glasfaserverstärkt";;3842548747;;;
-140000243;411517200;"Aluminiumprofil 45x45L R;Nut 10;20 St. x 6000mm;";;3842557948;;;
+140000243;411517200;"Aluminiumprofil 45x45L R;Nut 10;20 St. x 6000mm;";;3842557948;;;20102501
 140000247;411517250;"Abdeckkappe 45x45R, Nut 10,;schwarz, t=4 mm, Material: PA;glasfaserverstärkt;";;3842548801;;;
 140000248;411517855;"Abdeckkappe 45x60, Nut 10,;schwarz, ESD, t=4 mm,;Material: PA;glasfaserverstärkt";;3842548755;;;
 140000249;411518351;"Abdeck- und Einfassprofil~; Nut;10 schwarz, RAL9005, Länge;2000 mm Material: PP + TPE;";;3842518351;;;
@@ -1627,37 +1627,37 @@
 140000252;411518369;"Abdeckprofil~; Nut 10, Gelb,;RAL 1018 Länge 2000 mm~;;Material PP;";;3842518369;;;
 140000253;411523442;"Abdeckkappe 45x45 mit Loch,;Nut 10, schwarz, t=4 mm,;Material: PA;glasfaserverstärkt";;;;;
 140000254;411523598;"Profilschiene 30x45C;Nut 10;20 St. x 6000mm;";;3842523598;;;
-140000258;411524040;"Aluminiumprofil 45x30°;Nut 10;20 St. x 6000mm;";;3842557954;;;
+140000258;411524040;"Aluminiumprofil 45x30°;Nut 10;20 St. x 6000mm;";;3842557954;;;20102571
 140000262;411524043;"Aluminiumprofil 45x45°;Nut 10;20 St. x 6000mm;";;3842557955;;;
-140000266;411524046;"Aluminiumprofil 45x60°;Nut 10;20 St. x 6000mm;";;3842557956;;;
+140000266;411524046;"Aluminiumprofil 45x60°;Nut 10;20 St. x 6000mm;";;3842557956;;;20102591
 140000270;411528968;"Abdeckkappe 40x40, Nut 10,;schwarz, t=4 mm, Material: PA;glasfaserverstärkt;";;;;;
 140000271;411529039;"Abdeckkappe 80x80, Nut 10,;schwarz, ESD t=4 mm, Material:;PA glasfaserverstärkt;";;3842548751;;;
 140000272;411529044;"Abdeckkappe 40x40R, Nut 10,;schwarz, ESD t=4 mm, Material:;PA glasfaserverstärkt;";;3842548785;;;
-140000273;411529339;"Aluminiumprofil 40x40L;Nut 10;20 St. x 6000mm;";;3842529339;;;
-140000277;411529341;"Aluminiumprofil 40x80L;Nut 10;12 St. x 6000mm;";;3842529341;;;
+140000273;411529339;"Aluminiumprofil 40x40L;Nut 10;20 St. x 6000mm;";;3842529339;;;20101701
+140000277;411529341;"Aluminiumprofil 40x80L;Nut 10;12 St. x 6000mm;";;3842529341;;;20101901
 140000281;411529345;"Aluminiumprofil 40x160L;Nut 10;6 St. x 6000mm;";;3842529345;;;
-140000285;411529347;"Aluminiumprofil 80x80L;Nut 10;6 St. x 6000mm;";;3842529347;;;
+140000285;411529347;"Aluminiumprofil 80x80L;Nut 10;6 St. x 6000mm;";;3842529347;;;20107701
 140000289;411529349;"Aluminiumprofil 80x160L;Nut 10;2 St. x 6000mm;";;3842529349;;;
-140000293;411529351;"Aluminiumprofil 50x50L;Nut 10;20 St. x 6000mm;";;3842529351;;;
-140000297;411529355;"Aluminiumprofil 100x100L;Nut 10;6 St. x 6000mm;";;3842529355;;;
-140000301;411529359;"Aluminiumprofil 40x40L R;Nut 10;20 St. x 6000mm;";;3842529359;;;
+140000293;411529351;"Aluminiumprofil 50x50L;Nut 10;20 St. x 6000mm;";;3842529351;;;20104501
+140000297;411529355;"Aluminiumprofil 100x100L;Nut 10;6 St. x 6000mm;";;3842529355;;;20104901
+140000301;411529359;"Aluminiumprofil 40x40L R;Nut 10;20 St. x 6000mm;";;3842529359;;;20103301
 140000305;411529361;"Aluminiumprofil 40x40L 1N;Nut 10;20 St. x 6000mm;";;;;;
-140000309;411529363;"Aluminiumprofil 40x40L 2N;Nut 10;20 St. x 6000mm;";;3842529363;;;
-140000313;411529365;"Aluminiumprofil 40x40L 2NVS;Nut 10;20 St. x 6000mm;";;3842529365;;;
-140000317;411529367;"Aluminiumprofil 40x40L 3N;Nut 10;20 St. x 6000mm;";;3842529367;;;
+140000309;411529363;"Aluminiumprofil 40x40L 2N;Nut 10;20 St. x 6000mm;";;3842529363;;;20101741
+140000313;411529365;"Aluminiumprofil 40x40L 2NVS;Nut 10;20 St. x 6000mm;";;3842529365;;;20101721
+140000317;411529367;"Aluminiumprofil 40x40L 3N;Nut 10;20 St. x 6000mm;";;3842529367;;;20101731
 140000321;411531219;"Abdeckkappe 30x45, Nut 8,;schwarz, ESD t=3 mm, Material:;PA glasfaserverstärkt;";;3842548779;;;
 140000322;411536437;"Abdeckkappe 40x40, Nut 10,;lichtgrau RAL7035, t=4 mm,;Material: PA;glasfaserverstärkt";;;;;
 140000323;411536481;"Aluminiumprofil 80x80L 6N;Nut 10;6 St. x 6000mm;";;3842536481;;;
 140000327;411536484;"Aluminiumprofil 40x80L 4N;Nut 10;6 St. x 6000mm;";;3842536484;;;
-140000331;411537812;"Aluminiumprofil 22,5x45;Nut 10;24 St. x 6000mm;";;3842537812;;;
-140000335;411537823;"Aluminiumprofil 45x90x90L;Nut 10;8 St. x 6000mm;";;3842537823;;;
-140000339;411537824;"Aluminiumprofil 40x120L;Nut 10;8 St. x 6000mm;";;3842537824;;;
-140000343;411537825;"Aluminiumprofil 50x100L;Nut 10;10 St. x 6000mm;";;3842537825;;;
-140000347;411537827;"Aluminiumprofil 40x80x80L;Nut 10;8 St. x 6000mm;";;3842537827;;;
+140000331;411537812;"Aluminiumprofil 22,5x45;Nut 10;24 St. x 6000mm;";;3842537812;;;20103101
+140000335;411537823;"Aluminiumprofil 45x90x90L;Nut 10;8 St. x 6000mm;";;3842537823;;;20107401
+140000339;411537824;"Aluminiumprofil 40x120L;Nut 10;8 St. x 6000mm;";;3842537824;;;20103801
+140000343;411537825;"Aluminiumprofil 50x100L;Nut 10;10 St. x 6000mm;";;3842537825;;;20104801
+140000347;411537827;"Aluminiumprofil 40x80x80L;Nut 10;8 St. x 6000mm;";;3842537827;;;20107301
 140000351;411537828;"Aluminiumprofil 80x120L;Nut 10;4 St. x 6000mm;";;3842537828;;;
 140000355;411538296;"Aluminiumprofil 90x90L 4NVS;Nut 10;6 St. x 6000mm;";;3842538296;;;
-140000359;411538298;"Aluminiumprofil 45x90L 3NVS;Nut 10;12 St. x 6000mm;";;3842538298;;;
-140000363;411538299;"Aluminiumprofil 45x90L 2N;Nut 10;12 St. x 6000mm;";;3842538299;;;
+140000359;411538298;"Aluminiumprofil 45x90L 3NVS;Nut 10;12 St. x 6000mm;";;3842538298;;;20106021
+140000363;411538299;"Aluminiumprofil 45x90L 2N;Nut 10;12 St. x 6000mm;";;3842538299;;;20106041
 140000367;411538330;"Aluminiumprofil 40x80L 3NVS;Nut 10;6 St. x 6000mm;";;3842538330;;;
 140000371;411538334;"Aluminiumprofil 80x80L 4NVS;Nut 10;6 St. x 6000mm;";;3842538334;;;
 140000375;411541213;"Rundrohr D28L;Nut 10;20 St. x 6000mm;";;3842557244;;;
@@ -1688,55 +1688,55 @@
 140000403;411548876;"Abdeckprofil~; Nut 10~;;Signalgrau RAL7004 Länge 2000;mm~; Material:PP;";;3842548876;;;
 140000404;411551030;"Radiusausgleich 45x45 R3, PA;RAL7004 signalgrau, Radius;beidseitig;";;3842551030;;;
 140000405;411990115;"Schiebetürprofil AL45;Nut 10;;";;3842990115;;;
-140000406;411990292;"Aluminiumprofil 22,5x45;;;";;3842990292;;;
-140000407;411990300;"Aluminiumprofil 45x90;Nut 10;;";;3842990300;;;
-140000408;411990335;"Aluminiumprofil 45x180;Nut 10;;";;3842990335;;;
-140000409;411990345;"Aluminiumprofil 22,5x180;Nut 10/8;;";;3842990345;;;
-140000410;411990350;"Aluminiumprofil 60x60;Nut 10;;";;3842990350;;;
-140000411;411990416;"Aluminiumprofil 90x180;Nut 10;;";;3842990416;;;
-140000412;411990450;"Aluminiumprofil 60x90;Nut 10;;";;3842990450;;;
-140000413;411990500;"Aluminiumprofil 90x90;Nut 10;;";;3842990500;;;
-140000414;411990520;"Aluminiumprofil 45x45;Nut 10;;";;3842990520;;;
-140000415;411990570;"Aluminiumprofil 45x60;Nut 10;;";;3842990570;;;
-140000416;411990600;"Aluminiumprofil 90x90L 6N;Nut 10;;";;;;;
-140000417;411992387;"Aluminiumprofil 45x90x90L;Nut 10;;";;3842992387;;;
-140000418;411992401;"Aluminiumprofil 45x45L 1N;Nut 10;;";;3842992401;;;
-140000419;411992402;"Aluminiumprofil 45x45L 2NVS;Nut 10;;";;3842992402;;;
-140000420;411992403;"Aluminiumprofil 45x45L 2N;Nut 10;;";;3842992403;;;
-140000421;411992404;"Aluminiumprofil 45x45L 3N;Nut 10;;";;3842992404;;;
-140000422;411992411;"Rahmenprofil 22,5x45;Nut 10;;";;3842992411;;;
-140000423;411992415;"Aluminiumprofil 90x90L;Nut 10;;";;3842992415;;;
-140000424;411992425;"Aluminiumprofil 45x45L;Nut 10;;";;3842992425;;;
-140000425;411992432;"Aluminiumprofil 45x90L;Nut 10;;";;3842992432;;;
-140000426;411992443;"Aluminiumprofil 60x60L;Nut 10;;";;3842992443;;;
-140000427;411992473;"Aluminiumprofil 15x22,5;Nut 10;;";;3842992473;;;
-140000428;411992857;"Aluminiumprofil 90x180L;Nut 10;;";;3842992857;;;
-140000429;411992897;"Aluminiumprofil 45x45L R;Nut 10;;";;3842992897;;;
+140000406;411990292;"Aluminiumprofil 22,5x45;;;";;3842990292;;;20103100
+140000407;411990300;"Aluminiumprofil 45x90;Nut 10;;";;3842990300;;;20107000
+140000408;411990335;"Aluminiumprofil 45x180;Nut 10;;";;3842990335;;;20107200
+140000409;411990345;"Aluminiumprofil 22,5x180;Nut 10/8;;";;3842990345;;;20102800
+140000410;411990350;"Aluminiumprofil 60x60;Nut 10;;";;3842990350;;;20105100
+140000411;411990416;"Aluminiumprofil 90x180;Nut 10;;";;3842990416;;;20109500
+140000412;411990450;"Aluminiumprofil 60x90;Nut 10;;";;3842990450;;;20107500
+140000413;411990500;"Aluminiumprofil 90x90;Nut 10;;";;3842990500;;;20109000
+140000414;411990520;"Aluminiumprofil 45x45;Nut 10;;";;3842990520;;;20103000
+140000415;411990570;"Aluminiumprofil 45x60;Nut 10;;";;3842990570;;;20104000
+140000416;411990600;"Aluminiumprofil 90x90L 6N;Nut 10;;";;;;;20108060
+140000417;411992387;"Aluminiumprofil 45x90x90L;Nut 10;;";;3842992387;;;20107400
+140000418;411992401;"Aluminiumprofil 45x45L 1N;Nut 10;;";;3842992401;;;20102010
+140000419;411992402;"Aluminiumprofil 45x45L 2NVS;Nut 10;;";;3842992402;;;20102020
+140000420;411992403;"Aluminiumprofil 45x45L 2N;Nut 10;;";;3842992403;;;20102040
+140000421;411992404;"Aluminiumprofil 45x45L 3N;Nut 10;;";;3842992404;;;20102030
+140000422;411992411;"Rahmenprofil 22,5x45;Nut 10;;";;3842992411;;;20102900
+140000423;411992415;"Aluminiumprofil 90x90L;Nut 10;;";;3842992415;;;20108000
+140000424;411992425;"Aluminiumprofil 45x45L;Nut 10;;";;3842992425;;;20102000
+140000425;411992432;"Aluminiumprofil 45x90L;Nut 10;;";;3842992432;;;20106000
+140000426;411992443;"Aluminiumprofil 60x60L;Nut 10;;";;3842992443;;;20105000
+140000427;411992473;"Aluminiumprofil 15x22,5;Nut 10;;";;3842992473;;;20102700
+140000428;411992857;"Aluminiumprofil 90x180L;Nut 10;;";;3842992857;;;20109400
+140000429;411992897;"Aluminiumprofil 45x45L R;Nut 10;;";;3842992897;;;20102500
 140000430;411992946;"Profilschiene 30x45C;Nut 10;;";;3842992946;;;
-140000431;411993013;"Aluminiumprofil 45x30°;Nut 10;;";;3842993013;;;
+140000431;411993013;"Aluminiumprofil 45x30°;Nut 10;;";;3842993013;;;20102570
 140000432;411993014;"Aluminiumprofil 45x45°;Nut 10;;";;3842993014;;;
-140000433;411993015;"Aluminiumprofil 45x60°;Nut 10;;";;3842993015;;;
-140000434;411993120;"Aluminiumprofil 40x40L;Nut 10;;";;3842993120;;;
+140000433;411993015;"Aluminiumprofil 45x60°;Nut 10;;";;3842993015;;;20102590
+140000434;411993120;"Aluminiumprofil 40x40L;Nut 10;;";;3842993120;;;20101700
 140000435;411993127;"Aluminiumprofil 80x160L;Nut 10;;";;3842993127;;;
-140000436;411993130;"Aluminiumprofil 40x80L;Nut 10;;";;3842993130;;;
-140000437;411993133;"Aluminiumprofil 80x80L;Nut 10;;";;3842993133;;;
-140000438;411993139;"Aluminiumprofil 40x120L;Nut 10;;";;3842993139;;;
+140000436;411993130;"Aluminiumprofil 40x80L;Nut 10;;";;3842993130;;;20101900
+140000437;411993133;"Aluminiumprofil 80x80L;Nut 10;;";;3842993133;;;20107700
+140000438;411993139;"Aluminiumprofil 40x120L;Nut 10;;";;3842993139;;;20103800
 140000439;411993143;"Aluminiumprofil 40x160L;Nut 10;;";;3842993143;;;
-140000440;411993156;"Aluminiumprofil 50x50L;Nut 10;;";;3842993156;;;
-140000441;411993163;"Aluminiumprofil 50x100L;Nut 10;;";;3842993163;;;
-140000442;411993171;"Aluminiumprofil 100x100L;Nut 10;;";;3842993171;;;
-140000443;411993184;"Aluminiumprofil 40x40L R;Nut 10;;";;3842993184;;;
+140000440;411993156;"Aluminiumprofil 50x50L;Nut 10;;";;3842993156;;;20104500
+140000441;411993163;"Aluminiumprofil 50x100L;Nut 10;;";;3842993163;;;20104800
+140000442;411993171;"Aluminiumprofil 100x100L;Nut 10;;";;3842993171;;;20104900
+140000443;411993184;"Aluminiumprofil 40x40L R;Nut 10;;";;3842993184;;;20103300
 140000444;411993185;"Aluminiumprofil 40x40L 1N;Nut 10;;";;;;;
-140000445;411993187;"Aluminiumprofil 40x40L 2N;Nut 10;;";;3842993187;;;
-140000446;411993189;"Aluminiumprofil 40x40L 2NVS;Nut 10;;";;3842993189;;;
-140000447;411993191;"Aluminiumprofil 40x40L 3N;Nut 10;;";;3842993191;;;
-140000448;411993193;"Aluminiumprofil 40x80x80L;Nut 10;;";;3842993193;;;
+140000445;411993187;"Aluminiumprofil 40x40L 2N;Nut 10;;";;3842993187;;;20101740
+140000446;411993189;"Aluminiumprofil 40x40L 2NVS;Nut 10;;";;3842993189;;;20101720
+140000447;411993191;"Aluminiumprofil 40x40L 3N;Nut 10;;";;3842993191;;;20101730
+140000448;411993193;"Aluminiumprofil 40x80x80L;Nut 10;;";;3842993193;;;20107300
 140000449;411993201;"Aluminiumprofil 80x120L;Nut 10;;";;3842993201;;;
 140000450;411993423;"Aluminiumprofil 80x80L 6N;Nut 10;;";;3842993423;;;
 140000451;411993424;"Aluminiumprofil 40x80L 4N;Nut 10;;";;3842993424;;;
 140000452;411993621;"Aluminiumprofil 90x90L 4NVS;Nut 10;;";;3842993621;;;
-140000453;411993635;"Aluminiumprofil 45x90L 3NVS;Nut 10;;";;3842993635;;;
-140000454;411993644;"Aluminiumprofil 45x90L 2N;Nut 10;;";;3842993644;;;
+140000453;411993635;"Aluminiumprofil 45x90L 3NVS;Nut 10;;";;3842993635;;;20106020
+140000454;411993644;"Aluminiumprofil 45x90L 2N;Nut 10;;";;3842993644;;;20106040
 140000455;411993654;"Aluminiumprofil 40x80L 3NVS;Nut 10;;";;3842993654;;;
 140000456;411993658;"Aluminiumprofil 80x80L 4NVS;Nut 10;;";;3842993658;;;
 140000457;411996192;"Rundrohr D28L;Nut 10;;";;3842996192;;;
@@ -1767,19 +1767,19 @@
 140000482;412523205;"Gleiter 45x45 mittig Nut10;Material: POM natur;;";;3842523205;;;
 140000483;412523206;"Gleiter mittig mit Steg, 39 x;27,6mm Nut 10, Länge: 80mm,;POM natur;";;3842523206;;;
 140000484;412523532;"Winkel 30x30 Nut10/10 inkl.;Befestigung ESD Material :;Winkel Aluminiumdruckguss;blank Befestigung: stahl";;3842523532;;;
-140000485;412523546;"Winkel 60x60~; Nut10, ESD;Material: Aluminiumdruckguss;blank;";;3842523546;;;
+140000485;412523546;"Winkel 60x60~; Nut10, ESD;Material: Aluminiumdruckguss;blank;";;3842523546;;;321070
 140000486;412523553;"Winkel 60x60~; inkl.;Befestigung,Nut10/10 ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523553;;;
 140000487;412523555;"Abdeckkappe für Winkel 60 x 60;Material: PA schwarz;;";;;;;
-140000488;412523558;"Winkel 45x45, Nut 10, ESD;Material: Aluminiumdruckguss;blank;";;3842523558;;;
+140000488;412523558;"Winkel 45x45, Nut 10, ESD;Material: Aluminiumdruckguss;blank;";;3842523558;;;321051
 140000489;412523561;"Winkel 45x45, inkl.;Befestigung, Nut 10, ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523561;;;
-140000490;412523563;"Abdeckkappe für Winkel 45x45;Material: PA schwarz;;";;;;;
+140000490;412523563;"Abdeckkappe für Winkel 45x45;Material: PA schwarz;;";;;;;32105110
 140000491;412523564;"Abdeckkappe für Winkel 45x45,;Material PA, grau RAL 7035;;";;;;;
-140000492;412523567;"Winkel 45x90, Nut 10, ESD;Material: Aluminiumdruckguss;blank;";;3842523567;;;
+140000492;412523567;"Winkel 45x90, Nut 10, ESD;Material: Aluminiumdruckguss;blank;";;3842523567;;;321090
 140000493;412523570;"Winkel 45x90, inkl.;Befestigung, Nut 10, ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523570;;;
 140000494;412523572;"Abdeckkappe für Winkel 45x90;Material: PA schwarz;;";;;;;
-140000495;412523575;"Winkel 90x90~; Nut10, ESD;Material: Aluminiumdruckguss;;";;3842523575;;;
+140000495;412523575;"Winkel 90x90~; Nut10, ESD;Material: Aluminiumdruckguss;;";;3842523575;;;321110
 140000496;412523578;"Winkel 90x90 inkl.;Befestigung, Nut10/10 ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523578;;;
-140000497;412523580;"Abdeckkappe für Winkel 90x90;Material: PA schwarz;;";;;;;
+140000497;412523580;"Abdeckkappe für Winkel 90x90;Material: PA schwarz;;";;;;;32111010
 140000498;412523583;"Winkel 45x180~; Nut10, ESD;Material: Aluminiumdruckguss;blank;";;3842523583;;;
 140000499;412523874;"Würfelverbinder 45x45/3, Nut;10 inkl. 3 ABDK Schwarz,;Material Würfelverbinder:;Alu-Druckguss Abdeckkappe:";;3842523874;;;
 140000500;412523877;"Würfelverbinder 45x45/2, Nut;10 inkl. 2 ABDK Schwarz,;Material Würfelverbinder:;Alu-Druckguss Abdeckkappe:";;3842523877;;;
@@ -1797,7 +1797,7 @@
 140000512;412528744;"Nutensteinprofil Nut 10 ESD;Länge: 1500 mm, H = 10,5 mm,;Material: Stahl blank;";;3842528744;;;
 140000513;412528746;"Profilverbinder Nut10,;ESD,Länge 180 mm Material:;Stahl verzinkt inkl.;Befestigungsmaterial";;3842528746;;;
 140000514;412528967;"Winkel 40x40, Nut 10 Material:;Aluminiumdruckguß blank;;";;3842528967;;;
-140000515;412529005;"Winkel 40x80, Nut 10, ESD;Material: Aluminiumdruckguß;blank;";;3842529005;;;
+140000515;412529005;"Winkel 40x80, Nut 10, ESD;Material: Aluminiumdruckguß;blank;";;3842529005;;;321085
 140000516;412529007;"Abdeckkappe für Winkel 40x40;Material: PA schwarz;;";;;;;
 140000517;412529008;"Abdeckkappe für Winkel 40x80;Material: PA schwarz;;";;;;;
 140000518;412529009;"Abdeckkappe für Winkel 40x40;Material: PA, lichtgrau;RAL7035;";;;;;
@@ -1815,7 +1815,7 @@
 140000530;412529395;"Würfelverbinder 40/2, Nut 10,;ESD inkl. Befestigung (2x;Schraube S12x30) und 2x;Abdeckkappe schwarz Material";;;;;
 140000531;412529397;"Würfelverbinder 40/3, Nut 10,;ESD inkl. Befestigung (3x;Schraube S12x30) und 3x;Abdeckkappe schwarz Material";;;;;
 140000532;412529404;"Eckwinkel 40 inkl. 3x;Senkschraube Nut 10, S12 x 30,;Zinkdruckguss blank Material:;Zinkdruckguss";;3842529404;;;
-140000533;412530231;"Winkel 80x80~; Nut10, ESD;Material: Aluminiumdruckguss;;";;3842530231;;;
+140000533;412530231;"Winkel 80x80~; Nut10, ESD;Material: Aluminiumdruckguss;;";;3842530231;;;321105
 140000534;412530232;"Abdeckkappe für Winkel 80x80;Material. PA schwarz;;";;;;;
 140000535;412530235;"Zentralschraube M12 x 30 B=30;mm, S=M12, T=T50 Material:;Stahl verzinkt;";;3842530235;;;
 140000536;412530236;"Zentralschraube S12 x 30;(selbstformend) B=30 mm,;S=S12, T=T50 Material: Stahl;verzinkt";;3842530236;;;
@@ -1899,17 +1899,17 @@
 140000614;412548723;"Abdeckkappe eckig für;Eckwinkel 45 Material: PA;schwarz ESD;";;3842548723;;;
 140000615;412548834;"Variofix-Block, Nut 10, PA,;signalgrau mit Vierkantmutter;M6 und Sicherungsring;";;3842548834;;;
 140000616;412548840;"Variofix-Block S, Nut 10;Material: Kunststoff PA;RAL7004 signalgr mit;Vierkantmutter M5 VE = 10";;3842548840;;;
-140000617;412548852;"Abdeckkappe für Winkel 60x60;Material: PA, Signalgrau;RAL7004;";;3842548852;;;
+140000617;412548852;"Abdeckkappe für Winkel 60x60;Material: PA, Signalgrau;RAL7004;";;3842548852;;;32107020
 140000618;412548854;"Abdeckkappe für Winkel 40x40;Material: PA, signalgrau;RAL7004;";;3842548854;;;
 140000619;412548855;"Abdeckkappe ESD für Winkel;40x40 Material: PA schwarz;;";;3842548855;;;
 140000620;412548856;"Abdeckkappe für Winkel 40x80;Material: PA, signalgrau;RAL7004;";;3842548856;;;
 140000621;412548857;"Abdeckkappe ESD für Winkel;40x80 Material: PA schwarz;;";;3842548857;;;
 140000622;412548860;"Abdeckkappe für Winkel 80x80;Material: PA, Signalgrau;RAL7004;";;3842548860;;;
 140000623;412548861;"Abdeckkappe ESD für Winkel;80x80 Material. PA schwarz;;";;3842548861;;;
-140000624;412548862;"Abdeckkappe für Winkel 45x45;Material: PA, signalgrau;RAL7004;";;3842548862;;;
+140000624;412548862;"Abdeckkappe für Winkel 45x45;Material: PA, signalgrau;RAL7004;";;3842548862;;;32105120
 140000625;412548863;"Abdeckkappe für Winkel 45x45,;ESD Material: PA schwarz;;";;3842548863;;;
-140000626;412548864;"Abdeckkappe für Winkel 45x90;Material: PA, signalgrau;RAL7004;";;3842548864;;;
-140000627;412548868;"Abdeckkappe für Winkel 90x90;Material: PA, Signalgrau;RAL7004;";;3842548868;;;
+140000626;412548864;"Abdeckkappe für Winkel 45x90;Material: PA, signalgrau;RAL7004;";;3842548864;;;32109020
+140000627;412548868;"Abdeckkappe für Winkel 90x90;Material: PA, Signalgrau;RAL7004;";;3842548868;;;32111020
 140000628;412548869;"Abdeckkappe ESD für Winkel;90x90 Material: PA schwarz;;";;3842548869;;;
 140000629;412652000;"T-Matic Verbinder mit;Nutenstein Nut 10 nur für;Profil 45x45L und 45x90L;Material: Stahl verzinkt";;;;;
 140000630;412652001;"T-Matic Verbinder Nut 10 mit;Nutenstein, außer Profil 40x40;40x80, 45x45L, 45x90L u 80x80;Material: Stahl verzinkt";;;;;
@@ -1967,22 +1967,22 @@
 140000682;416500015;"Greifschale, 105x153,5x50mm,;Nut 10 Material: Kunststoff;PA, signalgelb RAL1003;";;;;;
 140000683;416516909;"Erdungskontakt ESD für 10mm;Druckknop;;";;;;;
 140000684;416537861;"Stahlwinkel Set Nut 10;Material: Stahl verzinkt;Lieferumfang: 4x Winkel inkl.;8x Hammerschraube M8 x 20 und";;3842537861;;;
-140000685;461517179;"Aluminiumprofil 20x20;Nut 6;20 St. x 3000mm;";;3842517179;;;
-140000689;461517180;"Aluminiumprofil 20x20 3N;Nut 6;20 St. x 3000mm;";;3842517180;;;
+140000685;461517179;"Aluminiumprofil 20x20;Nut 6;20 St. x 3000mm;";;3842517179;;;20100403
+140000689;461517180;"Aluminiumprofil 20x20 3N;Nut 6;20 St. x 3000mm;";;3842517180;;;20100531
 140000693;461517183;"Aluminiumprofil 20x20 R;Nut 6;20 St. x 3000mm;";;3842517183;;;
 140000697;461517243;"Abdeckkappe 20x20, Nut 6,;schwarz, t=2,5 mm, Material:;PA glasfaserverst.;";;;;;
 140000698;461518343;"Abdeck- und Einfassprofil~;;Nut6 schwarz, RAL9005, Länge;2000 mm~; Material: PP + TPE;";;3842518343;;;
 140000699;461519658;"Aluminiumprofil 20x20 2NVS;Nut 6;20 St. x 3000mm;";;3842519658;;;
 140000703;461536478;"Aluminiumprofil 20x20 2N;Nut 6;20 St. x 3000mm;";;3842536478;;;
-140000707;461537816;"Aluminiumprofil 20x40;Nut 6;24 St. x 3000mm;";;3842537816;;;
+140000707;461537816;"Aluminiumprofil 20x40;Nut 6;24 St. x 3000mm;";;3842537816;;;20100603
 140000711;461548742;"Abdeckkappe 20x20, Nut 6,;signalgrau t=2,5 mm, Material:;PA glasfaserverst. RAL7004;";;3842548742;;;
 140000712;461548743;"Abdeckkappe 20x20, Nut 6,;schwarz, ESD t=2,5mm,;Material: PA6GF30;";;3842548743;;;
-140000713;461992888;"Aluminiumprofil 20x20;Nut 6;;";;3842992888;;;
-140000714;461992889;"Aluminiumprofil 20x20 3N;Nut 6;;";;3842992889;;;
+140000713;461992888;"Aluminiumprofil 20x20;Nut 6;;";;3842992888;;;20100400
+140000714;461992889;"Aluminiumprofil 20x20 3N;Nut 6;;";;3842992889;;;20100530
 140000715;461992890;"Aluminiumprofil 20x20 R;Nut 6;;";;3842992890;;;
-140000716;461992891;"Aluminiumprofil 20x40;Nut 6;;";;3842992891;;;
-140000717;461992924;"Aluminiumprofil 20x20 2NVS;Nut 6;;";;3842992924;;;
-140000718;461993422;"Aluminiumprofil 20x20 2N;Nut 6;;";;3842993422;;;
+140000716;461992891;"Aluminiumprofil 20x40;Nut 6;;";;3842992891;;;20100600
+140000717;461992924;"Aluminiumprofil 20x20 2NVS;Nut 6;;";;3842992924;;;20100520
+140000718;461993422;"Aluminiumprofil 20x20 2N;Nut 6;;";;3842993422;;;20100540
 140000719;462514100;"Nutenstein M4, Nut 6,;Material: Stahl verzinkt;;";;;;;
 140000720;462514101;"Nutenstein M5, Nut 6,;Material: Stahl verzinkt;;";;;;;
 140000721;462514102;"Nutenstein M6, Nut 6,;Material: Stahl verzinkt;;";;;;;
@@ -1994,8 +1994,8 @@
 140000727;462523213;"Gleiter mittig flach, 17 x;9,8mm, Nut 6 Länge: 80mm, POM;natur;";;3842523213;;;
 140000728;462523508;"Winkel 20x20, Nut6 Material:;Aluminiumdruckguss;;";;3842523508;;;
 140000729;462523511;"Winkel 20 x 20 inkl.;Befestigung Nut 6/6, ESD;Material: Winkel;Aluminiumdruckguss";;3842523511;;;
-140000730;462523513;"Abdeckkappe für Winkel 20 x 20;Material: PA schwarz;;";;;;;
-140000731;462523517;"Winkel 20 x 40 Nut6 ESD;Material: Aluminiumdruckguß;blank;";;3842523517;;;
+140000730;462523513;"Abdeckkappe für Winkel 20 x 20;Material: PA schwarz;;";;;;;321131
+140000731;462523517;"Winkel 20 x 40 Nut6 ESD;Material: Aluminiumdruckguß;blank;";;3842523517;;;321025
 140000732;462523520;"Winkel 20 x 40 inkl.;Befestigung Nut 6/6 ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523520;;;
 140000733;462523522;"Abdeckkappe für Winkel 20 x 40;Material: PA schwarz;;";;;;;
 140000734;462523872;"Würfelverbinder 20 x 20/3, Nut;6 inkl. 3 ABDK Schwarz,;Material Würfelverbinder;Zinkdruckguss Abdeckkappe:";;3842523872;;;
@@ -2010,7 +2010,7 @@
 140000743;462536599;"Hammermutter ES M4, Nut 6,;Material: Edelstahl 1.4401;;";;3842536599;;;
 140000744;462537013;"Schnellspannverbinder mit;Hammer 0° oder 90°, Nut 6,;B=10 mm Material: Edelstahl;Bearbeitung (d): D8 oder DB8";;3842537013;;;
 140000745;462538707;"Winkel 20x20, Nut 6/6, inkl.;Befestigung silber;pulverbschichtet Material:;Winkel Aluminiumdruckguss";;3842551596;;;
-140000746;462538708;"Winkel 20 x 40 Nut6 inkl.;Befestigung silber;pulverbeschichtet Material :;Winkel Aluminiumdruckguss";;3842551597;;;
+140000746;462538708;"Winkel 20 x 40 Nut6 inkl.;Befestigung silber;pulverbeschichtet Material :;Winkel Aluminiumdruckguss";;3842551597;;;321026
 140000747;462548708;"Abdeckkappe rund für Eckwinkel;20 Material: PA signalgrau;RAL7004;";;3842548708;;;
 140000748;462548712;"Abdeckkappe rund für Eckwinkel;20 Material: PA schwarz ESD;;";;3842548712;;;
 140000749;462548716;"Abdeckkappe eckig für;Eckwinkel 20 Material: PA;signalgrau RAL7004;";;3842548716;;;
@@ -2026,33 +2026,33 @@
 140000759;481501232;"Abdeckkappe 30x30, Nut 8,;schwarz, t=4 mm~; Material: PA;glasfaserverstärkt;";;;;;
 140000760;481501962;"Abdeckprofil~; Nut 8~; Schwarz,;RAL 9005 Länge 2000 mm~;;Material:PP;";;;;;
 140000761;481503073;"Abdeckprofil~; Nut 8 Farblos;natur Länge 2000 mm~; Material;PP;";;3842503073;;;
-140000762;481506948;"Aluminiumprofil 30x30 1N;Nut 8;20 St. x 6000mm;";;3842557208;;;
-140000766;481506949;"Aluminiumprofil 30x30 2NVS;Nut 8;20 St. x 6000mm;";;3842557209;;;
-140000770;481506950;"Aluminiumprofil 30x30 2N;Nut 8;20 St. x 6000mm;";;3842557220;;;
-140000774;481506951;"Aluminiumprofil 30x30 3N;Nut 8;20 St. x 6000mm;";;3842557221;;;
-140000778;481509178;"Aluminiumprofil 30x30;Nut 8;20 St. x 6000mm;";;3842557206;;;
-140000782;481511704;"Aluminiumprofil 30x45;Nut 8/10;18 St. x 6000mm;";;3842511704;;;
-140000786;481512603;"Aluminiumprofil 30x60;Nut 8;10 St. x 6000mm;";;3842557205;;;
-140000790;481513581;"Aluminiumprofil 11x20;Nut 8;10 St. x 2000mm;";;3842513581;;;
+140000762;481506948;"Aluminiumprofil 30x30 1N;Nut 8;20 St. x 6000mm;";;3842557208;;;20101011
+140000766;481506949;"Aluminiumprofil 30x30 2NVS;Nut 8;20 St. x 6000mm;";;3842557209;;;20101021
+140000770;481506950;"Aluminiumprofil 30x30 2N;Nut 8;20 St. x 6000mm;";;3842557220;;;20101041
+140000774;481506951;"Aluminiumprofil 30x30 3N;Nut 8;20 St. x 6000mm;";;3842557221;;;20101031
+140000778;481509178;"Aluminiumprofil 30x30;Nut 8;20 St. x 6000mm;";;3842557206;;;20101001
+140000782;481511704;"Aluminiumprofil 30x45;Nut 8/10;18 St. x 6000mm;";;3842511704;;;20101601
+140000786;481512603;"Aluminiumprofil 30x60;Nut 8;10 St. x 6000mm;";;3842557205;;;20101101
+140000790;481513581;"Aluminiumprofil 11x20;Nut 8;10 St. x 2000mm;";;3842513581;;;20100101
 140000794;481513584;"Abdeckkappe 11x20, Nut 8,;schwarz, t=3 mm, Material: PA;glasfaserverstärkt;";;3842513584;;;
-140000795;481515229;"Rahmenprofil 22,5x30;Nut 8;20 St. x 6000mm;";;3842557946;;;
+140000795;481515229;"Rahmenprofil 22,5x30;Nut 8;20 St. x 6000mm;";;3842557946;;;20102601
 140000799;481516506;"Abdeckkappe 30x30, Nut 8,;lichtgrau, t=4 mm, Material:;PA glasfaserverstärkt RAL7035;";;;;;
 140000800;481517057;"Abdeckkappe 30x30, Nut 8,;schwarz, ESD t=4 mm, Material:;PA glasfaserverstärkt;";;3842548745;;;
-140000801;481517198;"Aluminiumprofil 30x30 R;Nut 8;20 St. x 6000mm;";;3842557947;;;
+140000801;481517198;"Aluminiumprofil 30x30 R;Nut 8;20 St. x 6000mm;";;3842557947;;;20100901
 140000805;481518347;"Abdeck- und Einfassprofil~;;Nut8 schwarz RAL9005~; Länge;2000 mm Material: PP + TPE;";;3842518347;;;
 140000806;481518375;"Abdeckprofil Nut8 Lichtgrau,;RAL 7035 Länge 2000 mm~;;Material PP;";;3842518375;;;
 140000807;481518376;"Abdeckprofil Nut 8 Rot, RAL;3020 Länge 2000 mm~; Material;PP;";;3842518376;;;
 140000808;481518377;"Abdeckprofil, Nut 8~; Gelb, RAL;1018 Länge 2000 mm~; Material;PP;";;3842518377;;;
-140000809;481522462;"Schutzgitterprofil 30x30 WG30;Nut 8;20 St. x 6000mm;";;3842557227;;;
-140000813;481522463;"Schutzgitterprofil 30x45 WG30;Nut 8;20 St. x 6000mm;";;3842557228;;;
-140000817;481522464;"Schutzgitterprofil 30x30 WG40;Nut 8;20 St. x 6000mm;";;3842557229;;;
-140000821;481522465;"Schutzgitterprofil 30x45 WG40;Nut 8;20 St. x 6000mm;";;3842557240;;;
+140000809;481522462;"Schutzgitterprofil 30x30 WG30;Nut 8;20 St. x 6000mm;";;3842557227;;;20100701
+140000813;481522463;"Schutzgitterprofil 30x45 WG30;Nut 8;20 St. x 6000mm;";;3842557228;;;20100801
+140000817;481522464;"Schutzgitterprofil 30x30 WG40;Nut 8;20 St. x 6000mm;";;3842557229;;;20100711
+140000821;481522465;"Schutzgitterprofil 30x45 WG40;Nut 8;20 St. x 6000mm;";;3842557240;;;20100811
 140000825;481524034;"Aluminiumprofil 30x45°;Nut 8;20 St. x 6000mm;";;3842557952;;;
 140000829;481524037;"Aluminiumprofil 30x60°;Nut 8;20 St. x 6000mm;";;3842557953;;;
-140000833;481524049;"Aluminiumprofil 30x60x60;Nut 8;20 St. x 6000mm;";;3842557241;;;
-140000837;481529934;"Streckenprofil SP1;Nut 8;20 St. x 6000mm;";;3842529934;;;
+140000833;481524049;"Aluminiumprofil 30x60x60;Nut 8;20 St. x 6000mm;";;3842557241;;;20107601
+140000837;481529934;"Streckenprofil SP1;Nut 8;20 St. x 6000mm;";;3842529934;;;20110501
 140000841;481536472;"Aluminiumprofil 30x60 4N;Nut 8;10 St. x 6000mm;";;;;;
-140000845;481537679;"Einhängeprofil 15x30;Nut 8;10 St. x 3000mm;";;3842537679;;;
+140000845;481537679;"Einhängeprofil 15x30;Nut 8;10 St. x 3000mm;";;3842537679;;;20100203
 140000849;481541937;"Aluminiumprofil 30x90;Nut 8;20 St. x 6000mm;";;;;;
 140000853;481548744;"Abdeckkappe 30x30, Nut 8,;signalgrau RAL7004, t=4 mm,;Material: PA;glasfaserverstärkt";;3842548744;;;
 140000854;481548774;"Abdeckkappe 30x30 mit Loch,;Nut 8 t=3 mm, Material: PA;glasfaserverstärkt signalgrau;RAL7004";;3842548774;;;
@@ -2060,25 +2060,25 @@
 140000856;481548776;"Abdeckkappe 30x30R, Nut 8,;signalgrau, t=3 mm, Material:;PA glasfaserverstärkt RAL7004;";;3842548776;;;
 140000857;481548777;"Abdeckkappe 30x30R, Nut 8,;schwarz, ESD, t=3 mm,;Material: PA6GF30;";;3842548777;;;
 140000858;481548878;"Abdeckprofil~; Nut 8~;;Signalgrau RAL7004 Länge 2000;mm~; Material:PP;";;3842548878;;;
-140000859;481990720;"Aluminiumprofil 30x30;Nut 8;;";;3842990720;;;
-140000860;481992397;"Aluminiumprofil 30x30 1N;Nut 8;;";;3842992397;;;
-140000861;481992398;"Aluminiumprofil 30x30 2NVS;Nut 8;;";;3842992398;;;
-140000862;481992399;"Aluminiumprofil 30x30 2N;Nut 8;;";;3842992399;;;
-140000863;481992400;"Aluminiumprofil 30x30 3N;Nut 8;;";;3842992400;;;
-140000864;481992430;"Aluminiumprofil 30x45;Nut 8/10;;";;3842992430;;;
-140000865;481992457;"Aluminiumprofil 30x60;Nut 8;;";;3842992457;;;
-140000866;481992476;"Aluminiumprofil 11x20;Nut 8;;";;3842992476;;;
-140000867;481992493;"Rahmenprofil 22,5x30;Nut 8;;";;3842992493;;;
-140000868;481992896;"Aluminiumprofil 30x30 R;Nut 8;;";;3842992896;;;
+140000859;481990720;"Aluminiumprofil 30x30;Nut 8;;";;3842990720;;;20101000
+140000860;481992397;"Aluminiumprofil 30x30 1N;Nut 8;;";;3842992397;;;20101010
+140000861;481992398;"Aluminiumprofil 30x30 2NVS;Nut 8;;";;3842992398;;;20101020
+140000862;481992399;"Aluminiumprofil 30x30 2N;Nut 8;;";;3842992399;;;20101040
+140000863;481992400;"Aluminiumprofil 30x30 3N;Nut 8;;";;3842992400;;;20101030
+140000864;481992430;"Aluminiumprofil 30x45;Nut 8/10;;";;3842992430;;;20101600
+140000865;481992457;"Aluminiumprofil 30x60;Nut 8;;";;3842992457;;;20101100
+140000866;481992476;"Aluminiumprofil 11x20;Nut 8;;";;3842992476;;;20100100
+140000867;481992493;"Rahmenprofil 22,5x30;Nut 8;;";;3842992493;;;20102600
+140000868;481992896;"Aluminiumprofil 30x30 R;Nut 8;;";;3842992896;;;20100900
 140000869;481992934;"Streckenprofil SP1;Nut 8;;";;3842992934;;;
-140000870;481992970;"Schutzgitterprofil 30x30 WG30;Nut 8;;";;3842992970;;;
-140000871;481992971;"Schutzgitterprofil 30x45 WG30;Nut 8;;";;3842992971;;;
-140000872;481992973;"Schutzgitterprofil 30x45 WG40;Nut 8;;";;3842992973;;;
+140000870;481992970;"Schutzgitterprofil 30x30 WG30;Nut 8;;";;3842992970;;;20100700
+140000871;481992971;"Schutzgitterprofil 30x45 WG30;Nut 8;;";;3842992971;;;20100800
+140000872;481992973;"Schutzgitterprofil 30x45 WG40;Nut 8;;";;3842992973;;;20100810
 140000873;481992978;"Schutzgitterprofil 30x30 WG40;Nut 8;;";;3842992978;;;
 140000874;481993011;"Aluminiumprofil 30x45°;Nut 8;;";;3842993011;;;
 140000875;481993012;"Aluminiumprofil 30X60°;Nut 8;;";;3842993012;;;
-140000876;481993016;"Aluminiumprofil 30x60x60;Nut 8;;";;3842993016;;;
-140000877;481993411;"Einhängeprofil 15x30;Nut 8;;";;3842993411;;;
+140000876;481993016;"Aluminiumprofil 30x60x60;Nut 8;;";;3842993016;;;20107600
+140000877;481993411;"Einhängeprofil 15x30;Nut 8;;";;3842993411;;;20100200
 140000878;481993420;"Aluminiumprofil 30x60 4N;Nut 8;;";;3842993420;;;
 140000879;481993762;"Aluminiumprofil 30x90;Nut 8;;";;3842993762;;;
 140000880;482200160;"Rhombusmutter M3, Nut 8,;Material: Zinkdruckguss;;";;;;;
@@ -2105,11 +2105,11 @@
 140000901;482521216;"Profilverbinder Nut 8,;ESD,Länge 180 mm Material:;Stahl verzinkt inkl.;Befestigungsmaterial";;3842521216;;;
 140000902;482523209;"Gleiter 30x30, mittig, Nut 8/8;Material: POM natur;;";;3842523209;;;
 140000903;482523212;"Gleiter flach, Nut 8 Material:;POM natur;;";;3842523212;;;
-140000904;482523525;"Winkel 30x30 Nut8 Material:;Aluminiumdruckguß blank;;";;3842523525;;;
+140000904;482523525;"Winkel 30x30 Nut8 Material:;Aluminiumdruckguß blank;;";;3842523525;;;321030
 140000905;482523528;"Winkel 30 x 30 inkl.;Befestigung Nut 8/8 ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523528;;;
 140000906;482523535;"Abdeckkappe für Winkel 30x30;Material PA schwarz, ESD;;";;3842548847;;;
 140000907;482523536;"Abdeckkappe für Winkel 30x30;Material: lichtgrau RAL7035;;";;;;;
-140000908;482523538;"Winkel 30 x 60 ~; Nut8;Material: Aluminiumdruckguß;blank;";;3842523538;;;
+140000908;482523538;"Winkel 30 x 60 ~; Nut8;Material: Aluminiumdruckguß;blank;";;3842523538;;;321042
 140000909;482523541;"Winkel 30 x 60 inkl.;Befestigung Nut 8/8 ESD;Material : Winkel;Aluminiumdruckguss blank";;3842523541;;;
 140000910;482523543;"Abdeckkappe für Winkel 30 x 60;Material: PA schwarz;;";;;;;
 140000911;482523549;"Winkel 60x60~; inkl.;Befestigung, Nut8 ESD Material;: Winkel Aluminiumdruckguss;blank Befestigung Stahl";;3842523549;;;

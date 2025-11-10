@@ -47,6 +47,15 @@ const CatalogMapper = () => {
   const [matchLoading, setMatchLoading] = useState(false)
   const [gotoInput, setGotoInput] = useState('')
 
+  // Undo state
+  const [lastSavedMapping, setLastSavedMapping] = useState<{
+    index: number
+    artikelnummer: string
+    syskompNummer: string
+  } | null>(null)
+  const [canUndo, setCanUndo] = useState(false)
+  const [justSaved, setJustSaved] = useState(false) // Track if we just saved
+
   // Fetch available catalogs on mount
   useEffect(() => {
     const fetchCatalogs = async () => {
@@ -143,8 +152,25 @@ const CatalogMapper = () => {
       return
     }
 
+    // Just mark as ready to save, don't save yet
+    setJustSaved(true)
+    setError(null)
+  }
+
+  const actuallyPerformSave = async () => {
+    if (!selectedMatch) return
+
     const currentProduct = catalogProducts[currentIndex]
     if (!currentProduct) return
+
+    // Determine column based on catalog type
+    const catalogInfo = catalogs.find(c => c.path === selectedCatalog)
+    const catalogType = catalogInfo?.type?.toLowerCase() || 'ask'
+
+    let col = 'H' // Default to ASK
+    if (catalogType === 'alvaris') col = 'F' // Alvaris Artnr
+    else if (catalogType === 'bosch') col = 'E'
+    else if (catalogType === 'item') col = 'D'
 
     try {
       const response = await fetch(`${API_URL}/update-entry`, {
@@ -154,23 +180,54 @@ const CatalogMapper = () => {
         },
         body: JSON.stringify({
           syskomp_neu: selectedMatch,
-          col: 'H',
+          col: col,
           value: currentProduct.Artikelnummer
         }),
       })
 
       if (!response.ok) {
-        throw new Error('Fehler beim Speichern')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Fehler beim Speichern')
       }
 
-      // Move to next product
-      handleNext()
+      // Mark product as already mapped in the local state
+      const updatedProducts = [...catalogProducts]
+      updatedProducts[currentIndex] = {
+        ...updatedProducts[currentIndex],
+        already_mapped: true
+      }
+      setCatalogProducts(updatedProducts)
+
+      // Save for undo
+      setLastSavedMapping({
+        index: currentIndex,
+        artikelnummer: currentProduct.Artikelnummer,
+        syskompNummer: selectedMatch
+      })
+      setCanUndo(true)
+      setError(null)
     } catch (err: any) {
       setError(err.message || 'Fehler beim Speichern')
+      throw err
     }
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    // If "Passt" was clicked, save before navigating
+    if (justSaved && selectedMatch) {
+      try {
+        await actuallyPerformSave()
+        // After saving successfully, keep canUndo active
+        setCanUndo(true)
+      } catch (err) {
+        // Don't navigate if save failed
+        return
+      }
+    }
+
+    // Reset justSaved but keep canUndo if we just saved
+    setJustSaved(false)
+
     if (currentIndex < catalogProducts.length - 1) {
       const nextIndex = currentIndex + 1
       setCurrentIndex(nextIndex)
@@ -179,7 +236,22 @@ const CatalogMapper = () => {
     }
   }
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
+    // If "Passt" was clicked, save before navigating
+    if (justSaved && selectedMatch) {
+      try {
+        await actuallyPerformSave()
+        // After saving successfully, keep canUndo active
+        setCanUndo(true)
+      } catch (err) {
+        // Don't navigate if save failed
+        return
+      }
+    }
+
+    // Reset justSaved but keep canUndo if we just saved
+    setJustSaved(false)
+
     if (currentIndex > 0) {
       const prevIndex = currentIndex - 1
       setCurrentIndex(prevIndex)
@@ -188,8 +260,52 @@ const CatalogMapper = () => {
     }
   }
 
+  const handleUndo = async () => {
+    // Scenario 1: User clicked "Passt" but hasn't navigated yet (not saved to backend)
+    if (justSaved && !canUndo) {
+      // Just clear the selection and reset states
+      setSelectedMatch('')
+      setJustSaved(false)
+      setError(null)
+      return
+    }
+
+    // Scenario 2: Already saved to backend, need to call undo API
+    if (!lastSavedMapping || !canUndo) return
+
+    try {
+      // Call undo endpoint
+      const response = await fetch(`${API_URL}/undo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({})
+      })
+
+      if (!response.ok) {
+        throw new Error('Fehler beim Rückgängig machen')
+      }
+
+      // Go back to the saved mapping index
+      setCurrentIndex(lastSavedMapping.index)
+      setSelectedMatch('')
+      findMatches(catalogProducts[lastSavedMapping.index].Beschreibung)
+
+      // Disable undo after using it and reset saved state
+      setCanUndo(false)
+      setJustSaved(false)
+      setLastSavedMapping(null)
+    } catch (err: any) {
+      setError(err.message || 'Fehler beim Rückgängig machen')
+    }
+  }
 
   const handleGoto = () => {
+    // Disable undo when navigating
+    setCanUndo(false)
+    setJustSaved(false)
+
     const targetNumber = parseInt(gotoInput)
     if (!isNaN(targetNumber) && targetNumber >= 1 && targetNumber <= catalogProducts.length) {
       const targetIndex = targetNumber - 1
@@ -396,22 +512,63 @@ const CatalogMapper = () => {
               )}
             </div>
 
-            {/* RIGHT COLUMN: Buttons, Matches */}
+            {/* RIGHT COLUMN: Input Fields, Buttons, Matches */}
             <div>
+              {/* Syskomp Input Fields */}
+              <div style={{ marginBottom: '8px', display: 'flex', gap: '8px', fontSize: '11px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '2px' }}>Syskomp neu:</label>
+                  <input
+                    type="text"
+                    value={selectedMatch}
+                    readOnly
+                    maxLength={10}
+                    style={{
+                      width: '100px',
+                      padding: '4px 6px',
+                      border: '1px solid #ccc',
+                      borderRadius: '3px',
+                      backgroundColor: '#f5f5f5',
+                      fontSize: '11px'
+                    }}
+                    placeholder="-"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '2px' }}>Syskomp alt:</label>
+                  <input
+                    type="text"
+                    value={matches.find(m => m.syskomp_neu === selectedMatch)?.syskomp_alt || ''}
+                    readOnly
+                    maxLength={10}
+                    style={{
+                      width: '100px',
+                      padding: '4px 6px',
+                      border: '1px solid #ccc',
+                      borderRadius: '3px',
+                      backgroundColor: '#f5f5f5',
+                      fontSize: '11px'
+                    }}
+                    placeholder="-"
+                  />
+                </div>
+              </div>
+
               {/* Action Buttons */}
               <div style={{ marginBottom: '8px' }}>
                 <div style={{ display: 'flex', gap: '4px' }}>
                   <button
                     onClick={handleSaveMapping}
-                    disabled={!selectedMatch}
+                    disabled={!selectedMatch || justSaved}
                     className="action-button"
                     style={{
                       flex: 2,
-                      backgroundColor: selectedMatch ? '#28a745' : '#ccc',
+                      backgroundColor: (selectedMatch && !justSaved) ? '#28a745' : '#ccc',
                       color: 'white',
                       fontWeight: 'bold',
                       padding: '6px 10px',
-                      fontSize: '11px'
+                      fontSize: '11px',
+                      cursor: (selectedMatch && !justSaved) ? 'pointer' : 'not-allowed'
                     }}
                   >
                     ✓ Passt
@@ -421,6 +578,22 @@ const CatalogMapper = () => {
                   </button>
                   <button onClick={handleNext} disabled={currentIndex >= catalogProducts.length - 1} style={{ flex: 1, padding: '4px 6px', fontSize: '10px' }}>
                     Weiter ▶
+                  </button>
+                  <button
+                    onClick={handleUndo}
+                    disabled={!canUndo && !justSaved}
+                    style={{
+                      flex: 1,
+                      padding: '4px 6px',
+                      fontSize: '10px',
+                      backgroundColor: (canUndo || justSaved) ? '#ff9800' : '#e0e0e0',
+                      color: (canUndo || justSaved) ? 'white' : '#999',
+                      border: '1px solid #ccc',
+                      cursor: (canUndo || justSaved) ? 'pointer' : 'not-allowed',
+                      borderRadius: '3px'
+                    }}
+                  >
+                    ↶ Undo
                   </button>
                 </div>
               </div>
@@ -443,7 +616,12 @@ const CatalogMapper = () => {
                       filteredMatches.map((match, idx) => (
                         <div
                           key={idx}
-                          onClick={() => setSelectedMatch(match.syskomp_neu)}
+                          onClick={() => {
+                            setSelectedMatch(match.syskomp_neu)
+                            // When a new match is clicked, reset states
+                            setJustSaved(false)
+                            setCanUndo(false)
+                          }}
                           style={{
                             padding: '4px 6px',
                             cursor: 'pointer',

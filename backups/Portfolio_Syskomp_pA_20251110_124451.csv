@@ -818,7 +818,7 @@
 120000367;251010001;"Scheibendichtung Nut 5 Schwarz;Material: Kunststoff TPE;Abnahmemeng: pro Meter;Bestellmenge am Stück: Max.";0.0.437.12;;-;-;
 120000368;251201000;"Aluminiumprofil 20x10;Nut 5;16 St. x 3000mm;";0.0.391.02;;1010404;PRO5.2010;
 120000372;251201901;"Aluminiumprofil 20x10;Nut 5;;";0.0.448.03;;-;-;
-120000373;251202000;"Aluminiumprofil 20x20;Nut 5;16 St. x 3000mm;";0.0.370.03;;1010405;PRO;20201003
+120000373;251202000;"Aluminiumprofil 20x20;Nut 5;16 St. x 3000mm;";0.0.370.03;;1010405;PRO;
 120000377;251202010;"Aluminiumprofil 20x20 1N;Nut 5;16 St. x 3000mm;";0.0.437.74;;1010406;PRO5.20201N;
 120000381;251202020;"Aluminiumprofil 20x20 2N90;Nut 5;16 St. x 3000mm;";0.0.437.66;;1010407;PRO5.20202N90;
 120000385;251202030;"Aluminiumprofil 20x20 3N;Nut 5;16 St. x 3000mm;";0.0.464.83;;-;-;
@@ -826,7 +826,7 @@
 120000393;251202901;"Aluminiumprofil 20x20;Nut 5;;";0.0.448.04;;-;-;
 120000394;251202911;"Aluminiumprofil 20x20 1N;Nut 5;;";0.0.437.99;;-;-;
 120000395;251202921;"Aluminiumprofil 20x20 2N90;Nut 5;;";0.0.464.01;;-;-;
-120000396;251202931;"Aluminiumprofil 20x20 3N;Nut 5;;";0.0.448.33;;1010411;-;
+120000396;251202931;"Aluminiumprofil 20x20 3N;Nut 5;;";0.0.448.33;;-;-;
 120000397;251202991;"Aluminiumprofil R20 90°;Nut 5;;";0.0.448.19;;-;-;
 120000398;251401000;"Aluminiumprofil 40x10;Nut 5;16 St. x 3000mm;";0.0.391.06;;1010408;PRO5.4010;
 120000402;251401099;"Aluminiumprofil 40x10;Nut 5;;";0.0.448.06;;-;-;
@@ -1155,7 +1155,7 @@
 120000938;281804901;"Aluminiumprofil 80x40E;Nut 8;;";0.0.452.39;;-;-;
 120000939;281804911;"Aluminiumprofil 80x40L;Nut 8;;";0.0.452.41;;-;-;
 120000940;281804921;"Aluminiumprofil 80x40;Nut 8;;";0.0.452.94;;-;-;
-120000941;281804931;"Aluminiumprofil 80x40L 2N;Nut 8;;";0.0.452.97;;1010418;-;
+120000941;281804931;"Aluminiumprofil 80x40L 2N;Nut 8;;";0.0.452.97;;-;-;
 120000942;281804941;"Aluminiumprofil 80x40E 3N90;Nut 8;;";0.0.452.99;;-;-;
 120000943;281804951;"Aluminiumprofil 80x40E 2N180;Nut 8;;";0.0.452.98;;-;-;
 120000944;281804961;"Aluminiumprofil 80x40L 1N;Nut 8;;";0.0.607.26;;-;-;
@@ -1362,7 +1362,7 @@
 120001166;282800150;"Laufrolle D14~; St, 100 CR 6,;gehärtet geschliffen,;zweireihig kugelgelagert mit;zwei Deckscheiben,";0.0.294.52;;-;-;
 120001167;282800151;"Bolzen 8 D14 zentrisch;Material: stahl verzinkt;;";0.0.294.10;;-;-;
 120001168;282800152;"Bolzen 8 D14 exzentrisch;Material: stahl verzinkt;;";0.0.294.12;;-;-;
-120001169;282800200;"Wellenklemmprofil 8 D14;;10 St. x 3000mm;";0.0.453.68;;-;-;20100103
+120001169;282800200;"Wellenklemmprofil 8 D14;;10 St. x 3000mm;";0.0.453.68;;-;-;
 120001173;282899200;"Wellenklemmprofil 8 D14;;;";0.0.453.68;;-;-;
 120001174;283500500;"Bodenplattte 8 160 Al,;eloxiert natur 2 Abdeckkappen;8 160x28 3 Gewindestifte DIN;915 M10x30, St. blank 3";0.0.026.17;;-;-;
 120001175;283500501;"Bodenplatte 8 280 Al, eloxiert;natur 2 Abdeckkappen 8 160x28;;";0.0.388.69;;-;-;
@@ -1451,7 +1451,7 @@
 120001261;;"Aluminiumprofil 152x20;Nut 8;4 St. x 6000mm;";;;;;
 120001262;;"Aluminiumprofil 55x20;Nut 8;;";;;;;
 120001263;;"Aluminiumprofil 55x20;Nut 8;4 St. x 6000mm;";;;;;
-120001264;;"Klemmprofil 30x30 180°;Nut 6;;";;;1010415;;
+120001264;;"Klemmprofil 30x30 180°;Nut 6;;";;;;;
 120001265;;"Klemmprofil 30x30 180°;Nut 6;8 St. x 6000mm;";;;;;
 120001266;;"Schiebetuerprofil 40x10;Nut 8;;";;;;;
 120001267;;"Schiebetuerprofil 40x10;Nut 8;10 St. x 3000mm;";;;;;
@@ -2052,7 +2052,7 @@
 140000833;481524049;"Aluminiumprofil 30x60x60;Nut 8;20 St. x 6000mm;";;3842557241;;;20107601
 140000837;481529934;"Streckenprofil SP1;Nut 8;20 St. x 6000mm;";;3842529934;;;20110501
 140000841;481536472;"Aluminiumprofil 30x60 4N;Nut 8;10 St. x 6000mm;";;;;;
-140000845;481537679;"Einhängeprofil 15x30;Nut 8;10 St. x 3000mm;";;3842537679;;;20100203
+140000845;481537679;"Einhängeprofil 15x30;Nut 8;10 St. x 3000mm;";;3842537679;;;20100201
 140000849;481541937;"Aluminiumprofil 30x90;Nut 8;20 St. x 6000mm;";;;;;
 140000853;481548744;"Abdeckkappe 30x30, Nut 8,;signalgrau RAL7004, t=4 mm,;Material: PA;glasfaserverstärkt";;3842548744;;;
 140000854;481548774;"Abdeckkappe 30x30 mit Loch,;Nut 8 t=3 mm, Material: PA;glasfaserverstärkt signalgrau;RAL7004";;3842548774;;;
