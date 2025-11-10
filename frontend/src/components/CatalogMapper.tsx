@@ -397,44 +397,6 @@ const CatalogMapper = () => {
             <h3 style={{ marginTop: 0, marginBottom: '6px', fontSize: '11px' }}>Filter für Matches</h3>
 
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-              {/* Filter Type */}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <label style={{ fontWeight: 'bold', fontSize: '10px' }}>Typ:</label>
-                <label style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <input
-                    type="radio"
-                    value="all"
-                    checked={filterType === 'all'}
-                    onChange={(e) => {
-                      setFilterType(e.target.value as 'all')
-                      findMatches(currentProduct.Beschreibung)
-                    }}
-                  /> Alle
-                </label>
-                <label style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <input
-                    type="radio"
-                    value="item"
-                    checked={filterType === 'item'}
-                    onChange={(e) => {
-                      setFilterType(e.target.value as 'item')
-                      findMatches(currentProduct.Beschreibung)
-                    }}
-                  /> Item
-                </label>
-                <label style={{ fontSize: '10px', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <input
-                    type="radio"
-                    value="bosch"
-                    checked={filterType === 'bosch'}
-                    onChange={(e) => {
-                      setFilterType(e.target.value as 'bosch')
-                      findMatches(currentProduct.Beschreibung)
-                    }}
-                  /> Bosch
-                </label>
-              </div>
-
               {/* Similarity Slider */}
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: '1 1 150px' }}>
                 <label style={{ fontWeight: 'bold', fontSize: '10px', whiteSpace: 'nowrap' }}>
@@ -454,9 +416,9 @@ const CatalogMapper = () => {
               </div>
 
               {/* Text Filter */}
-              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: '1 1 150px' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flex: '1 1 200px' }}>
                 <label style={{ fontWeight: 'bold', fontSize: '10px', whiteSpace: 'nowrap' }}>
-                  Text:
+                  Filtern von Beschreibung:
                 </label>
                 <input
                   type="text"
