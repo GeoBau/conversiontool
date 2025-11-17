@@ -5,7 +5,7 @@ echo ====================================
 echo.
 
 REM Prüfe ob Python installiert ist
-python --version >nul 2>&1
+py --version >nul 2>&1
 if errorlevel 1 (
     echo FEHLER: Python ist nicht installiert oder nicht im PATH!
     pause
@@ -21,7 +21,7 @@ if errorlevel 1 (
 )
 
 echo [1/2] Starte Backend (Flask)...
-start "Portfolio Backend" cmd /c "cd api && python app.py"
+start "Portfolio Backend" cmd /c "cd api && py app.py"
 
 echo Warte 3 Sekunden...
 timeout /t 3 /nobreak >nul

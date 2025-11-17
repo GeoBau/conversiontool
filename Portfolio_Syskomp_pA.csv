@@ -821,7 +821,7 @@
 120000373;251202000;"Aluminiumprofil 20x20;Nut 5;16 St. x 3000mm;";0.0.370.03;;1010405;PRO;20201003
 120000377;251202010;"Aluminiumprofil 20x20 1N;Nut 5;16 St. x 3000mm;";0.0.437.74;;1010406;PRO5.20201N;
 120000381;251202020;"Aluminiumprofil 20x20 2N90;Nut 5;16 St. x 3000mm;";0.0.437.66;;1010407;PRO5.20202N90;
-120000385;251202030;"Aluminiumprofil 20x20 3N;Nut 5;16 St. x 3000mm;";0.0.464.83;;-;-;
+120000385;251202030;"Aluminiumprofil 20x20 3N;Nut 5;16 St. x 3000mm;";0.0.464.83;;-;-;20200500
 120000389;251202090;"Aluminiumprofil R20 90°;Nut 5;8 St. x 3000mm;";0.0.425.43;;1010413;PRO5.R2090;
 120000393;251202901;"Aluminiumprofil 20x20;Nut 5;;";0.0.448.04;;-;-;
 120000394;251202911;"Aluminiumprofil 20x20 1N;Nut 5;;";0.0.437.99;;1010404;-;20100510
@@ -829,7 +829,7 @@
 120000396;251202931;"Aluminiumprofil 20x20 3N;Nut 5;;";0.0.448.33;;1010411;-;
 120000397;251202991;"Aluminiumprofil R20 90°;Nut 5;;";0.0.448.19;;-;-;
 120000398;251401000;"Aluminiumprofil 40x10;Nut 5;16 St. x 3000mm;";0.0.391.06;;1010408;PRO5.4010;
-120000402;251401099;"Aluminiumprofil 40x10;Nut 5;;";0.0.448.06;;-;-;
+120000402;251401099;"Aluminiumprofil 40x10;Nut 5;;";0.0.448.06;;1010404;-;
 120000403;251402000;"Aluminiumprofil 40x20;Nut 5;16 St. x 3000mm;";0.0.370.04;;1010409;PRO5.4020;
 120000407;251402010;"Aluminiumprofil 40x20 2N;Nut 5;8 St. x 3000mm;";0.0.437.75;;-;-;20100103
 120000411;251402901;"Aluminiumprofil 40x20;Nut 5;;";0.0.448.07;;-;-;
@@ -1098,8 +1098,8 @@
 120000788;281401610;"Aluminiumprofil 40x16;Nut 8;10 St. x 3000mm;";0.0.026.84;;1010391;PRO4016;
 120000792;281401901;"Aluminiumprofil 40x16E;Nut 8;;";0.0.452.64;;-;-;
 120000793;281401911;"Aluminiumprofil 40x16;Nut 8;;";0.0.492.75;;-;-;
-120000794;281402000;"Rahmenprofil 40x20;Nut 8;10 St. x 6000mm;";0.0.616.95;;-;-;
-120000795;281402999;"Rahmenprofil 40x20;Nut 8;;";0.0.616.93;;-;-;
+120000794;281402000;"Rahmenprofil 40x20;Nut 8;10 St. x 6000mm;";0.0.616.95;;-;-;20100100
+120000795;281402999;"Rahmenprofil 40x20;Nut 8;;";0.0.616.93;;-;-;20100100
 120000796;281403200;"Aluminiumprofil 40x32L;Nut 8;10 St. x 6000mm;";0.0.494.97;;-;-;
 120000800;281403299;"Aluminiumprofil 40x32L;Nut 8;;";0.0.494.95;;-;-;
 120000801;281404000;"Aluminiumprofil 40x40E;Nut 8;16 St. x 6000mm;";7.0.000.09;;1010396;PRO4040E;
@@ -1117,9 +1117,9 @@
 120000846;281404140;"Klemmprofil 40x40;Nut 8;16 St. x 6000mm;";0.0.452.25;;-;-;
 120000850;281404149;"Klemmprofil 40x40;Nut 8;;";0.0.452.25;;-;-;
 120000851;281404150;"Klemmprofil 40x40 180°;Nut 8;8 St. x 6000mm;";0.0.452.26;;-;-;
-120000855;281404159;"Klemmprofil 40x40 180°;Nut 8;;";0.0.452.26;;1010396;-;
+120000855;281404159;"Klemmprofil 40x40 180°;Nut 8;;";0.0.452.26;;1010397;-;
 120000856;281404901;"Aluminiumprofil 40x40E;Nut 8;;";0.0.452.79;;-;-;
-120000857;281404911;"Aluminiumprofil 40x40L;Nut 8;;";0.0.452.81;;-;-;
+120000857;281404911;"Aluminiumprofil 40x40L;Nut 8;;";0.0.452.81;;1010397;-;
 120000858;281404921;"Aluminiumprofil 40x40;Nut 8;;";0.0.452.65;;-;-;
 120000859;281404931;"Aluminiumprofil 40x40L 1N;Nut 8;;";0.0.452.68;;1010397;-;
 120000860;281404941;"Aluminiumprofil 40x40E 45°;Nut 8;;";0.0.452.86;;-;-;
@@ -1413,7 +1413,7 @@
 120001223;8819940E;"Aluminium-Rollenprofil 40x40;Nut 5/8, ESD;;";;;;;
 120001224;;"Klemmprofil 30x30;Nut 6;;";;;;;
 120001225;;"Klemmprofil 30x30;Nut 6;16 St. x 6000mm;";;;;;
-120001226;;"Klemmwinkel 30x30;Nut 6;;";;;;;
+120001226;;"Klemmwinkel 30x30;Nut 6;;";;;;;351218
 120001227;;"Klemmwinkel 30x30;Nut 6;16 St. x 6000mm;";;;;;
 120001228;281006100-S;"Scheibeneinfassleiste 8;Aluminium;;";;;;;
 120001229;281404139;"Klemmprofil 40x40E;Nut 8;;";0.0.452.21;;-;-;
@@ -1423,7 +1423,7 @@
 120001233;;"Abdeckprofil Nut 6 Farbe:;verkehrsgrau ähnlich RAL 7042;Material: PP, Länge: 2000mm;";;;;;
 120001234;202500100-S;"Profil M W40x40x4E;Aluminium eloxiert;;";;;;;
 120001235;202500102-S;"Profil M W80x80x8E;Aluminium eloxiert;;";;;;;
-120001236;;"Aluminiumprofil 20x20L 2N180;Nut 5;;";;;1010407;;
+120001236;;"Aluminiumprofil 20x20L 2N180;Nut 5;;";;;1010406;;20201003
 120001237;;"Aluminiumprofil 20x20L 2N180;Nut 5;16 St. x 3000mm;";;;;;
 120001238;;"Aluminiumprofil 80x20;Nut 5;;";;;;;
 120001239;;"Aluminiumprofil 80x20;Nut 5;8 St. x 3000mm;";;;;;

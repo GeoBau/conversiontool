@@ -106,16 +106,16 @@ def validate_ask(number: str) -> Tuple[bool, str]:
     """
     Validiert ASK-Artikelnummer
     Nur Zahlen erlaubt
-    Genau 8 Zeichen
+    6 bis 8 Zeichen
     """
     if not number or not number.strip():
         return False, "Nummer darf nicht leer sein"
 
     number = number.strip()
 
-    # Muss genau 8 Zeichen lang sein
-    if len(number) != 8:
-        return False, "ASK-Nummer muss genau 8 Zeichen haben"
+    # Muss 6 bis 8 Zeichen lang sein
+    if len(number) < 6 or len(number) > 8:
+        return False, "ASK-Nummer muss 6-8 Zeichen haben"
 
     # Nur Zahlen erlaubt
     if not re.match(r'^\d+$', number):
@@ -128,7 +128,17 @@ def validate_generic(number: str, col: str) -> Tuple[bool, str]:
     """
     Generische Validierung für alle Spalten
     Routet zur spezifischen Validierungsfunktion
+
+    Erlaubt "-" als Platzhalter für "keine Nummer"
     """
+    # Erlaube "-" als gültigen Wert für "keine Nummer"
+    if number and number.strip() == '-':
+        return True, "OK (keine Nummer)"
+
+    # Erlaube leere Werte
+    if not number or not number.strip():
+        return True, "OK (leer)"
+
     if col == 'D':  # Item
         return validate_item(number)
     elif col == 'E':  # Bosch
@@ -234,8 +244,10 @@ if __name__ == '__main__':
     print(f"  'ABCDEFGHIJK' (Fehler - zu lang): {validate_alvaris_matnr('ABCDEFGHIJK')}")
     print(f"  'ABC-123' (Fehler - Bindestrich nicht erlaubt): {validate_alvaris_matnr('ABC-123')}")
 
-    # ASK Tests (genau 8 Zeichen, Zahlen)
-    print("\nASK Tests (genau 8 Zeichen, nur Zahlen):")
-    print(f"  '12345678' (OK): {validate_ask('12345678')}")
-    print(f"  'ASK123' (Fehler - zu kurz): {validate_ask('ASK123')}")
-    print(f"  'ASK-4567' (Fehler - 8 Zeichen aber ungültig): {validate_ask('ASK-4567')}")
+    # ASK Tests (6-8 Zeichen, Zahlen)
+    print("\nASK Tests (6-8 Zeichen, nur Zahlen):")
+    print(f"  '123456' (OK - 6 Zeichen): {validate_ask('123456')}")
+    print(f"  '1234567' (OK - 7 Zeichen): {validate_ask('1234567')}")
+    print(f"  '12345678' (OK - 8 Zeichen): {validate_ask('12345678')}")
+    print(f"  '12345' (Fehler - zu kurz): {validate_ask('12345')}")
+    print(f"  'ASK-4567' (Fehler - ungültig): {validate_ask('ASK-4567')}")

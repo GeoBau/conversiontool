@@ -83,6 +83,7 @@ portfolio-conversion-tool/
 PROMPTS/
 ALVARIS_CATALOG/
 ASK_CATALOG/
+backups/
 
 # Test files
 test_*.py
