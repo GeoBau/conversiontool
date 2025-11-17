@@ -39,7 +39,7 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
 
   const handleEdit = () => {
     setIsEditing(true)
-    setInputValue('')
+    setInputValue(isEmpty ? '' : value)  // Vorhandene Nummer ins Eingabefeld setzen
     setError(null)
     setValidationStatus('idle')
   }
@@ -131,6 +131,26 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
       setValidationStatus('idle')
     } catch (err: any) {
       setError(err.message || 'Fehler beim Speichern')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Möchten Sie die ${label} "${value}" wirklich löschen?`)) {
+      return
+    }
+
+    setSaving(true)
+    setError(null)
+
+    try {
+      await onSave('')  // Save empty string = delete
+      setIsEditing(false)
+      setInputValue('')
+      setValidationStatus('idle')
+    } catch (err: any) {
+      setError(err.message || 'Fehler beim Löschen')
     } finally {
       setSaving(false)
     }
@@ -230,6 +250,26 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
             >
               {saving ? 'Speichere...' : 'Speichern'}
             </button>
+            {!isEmpty && (
+              <button
+                onClick={handleDelete}
+                disabled={saving || validating}
+                className="delete-button"
+                style={{
+                  backgroundColor: '#ff6b6b',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '3px',
+                  padding: '4px 8px',
+                  cursor: saving || validating ? 'not-allowed' : 'pointer',
+                  fontSize: '0.9em',
+                  marginLeft: '4px'
+                }}
+                title="Nummer löschen"
+              >
+                Löschen
+              </button>
+            )}
             <button
               onClick={handleCancel}
               disabled={validating || saving}

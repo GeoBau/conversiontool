@@ -109,6 +109,58 @@ const NumberSearch = () => {
     setEditedValue('')
   }
 
+  const handleDeleteNumber = async (number: string, type: string) => {
+    if (!confirm(`Möchten Sie die Artikelnummer "${number}" wirklich löschen?`)) {
+      return
+    }
+
+    // Use the same update endpoint but with empty string
+    try {
+      const response = await fetch(`${API_URL}/update-catalog-artikelnr`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          catalog_type: type,
+          old_artikelnr: number,
+          new_artikelnr: ''  // Empty string = delete
+        })
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || 'Fehler beim Löschen')
+      }
+
+      // Update local state - remove the number by setting it to empty
+      if (result && result.result) {
+        const updatedResult = { ...result }
+        if (updatedResult.result?.input_number === number) {
+          updatedResult.result.input_number = ''
+        }
+        if (updatedResult.result?.corresponding_number === number) {
+          updatedResult.result.corresponding_number = ''
+        }
+        setResult(updatedResult)
+      } else if (result && result.results) {
+        const updatedResult = { ...result }
+        updatedResult.results = updatedResult.results?.map(item => ({
+          ...item,
+          input_number: item.input_number === number ? '' : item.input_number,
+          corresponding_number: item.corresponding_number === number ? '' : item.corresponding_number
+        }))
+        setResult(updatedResult)
+      }
+
+      setEditingNumber(null)
+      setEditedValue('')
+      setError(null)
+    } catch (err: any) {
+      setError(err.message || 'Fehler beim Löschen der Artikelnummer')
+    }
+  }
+
   const handleSaveEdit = async (oldNumber: string, type: string) => {
     if (!editedValue.trim()) {
       setError('Artikelnummer darf nicht leer sein')
@@ -197,11 +249,25 @@ const NumberSearch = () => {
             Speichern
           </button>
           <button
+            onClick={() => handleDeleteNumber(number, type)}
+            style={{
+              padding: '4px 10px',
+              fontSize: '11px',
+              backgroundColor: '#ff6b6b',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              cursor: 'pointer'
+            }}
+          >
+            Löschen
+          </button>
+          <button
             onClick={handleCancelEdit}
             style={{
               padding: '4px 10px',
               fontSize: '11px',
-              backgroundColor: '#dc3545',
+              backgroundColor: '#6c757d',
               color: 'white',
               border: 'none',
               borderRadius: '3px',

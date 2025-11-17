@@ -429,20 +429,21 @@ def validate_number():
 
 @app.route('/api/update-entry', methods=['POST'])
 def update_entry():
-    """Aktualisiert eine Zelle in der CSV"""
+    """Aktualisiert oder löscht eine Zelle in der CSV"""
     try:
         req_data = request.json
         syskomp_neu = req_data.get('syskomp_neu', '').strip()
         col = req_data.get('col', '').upper()
         value = req_data.get('value', '').strip()
 
-        if not syskomp_neu or not col or not value:
-            return jsonify({'error': 'Syskomp neu, Spalte und Wert erforderlich'}), 400
+        if not syskomp_neu or not col:
+            return jsonify({'error': 'Syskomp neu und Spalte erforderlich'}), 400
 
-        # Validierung
-        is_valid, message = validate_generic(value, col)
-        if not is_valid:
-            return jsonify({'error': f'Validierung fehlgeschlagen: {message}'}), 400
+        # Validierung nur wenn Wert nicht leer (leer = löschen)
+        if value:
+            is_valid, message = validate_generic(value, col)
+            if not is_valid:
+                return jsonify({'error': f'Validierung fehlgeschlagen: {message}'}), 400
 
         # Spalten-Index berechnen (A=0, B=1, ..., H=7)
         col_index = ord(col) - ord('A')
@@ -556,15 +557,15 @@ def create_entry():
 
 @app.route('/api/update-catalog-artikelnr', methods=['POST'])
 def update_catalog_artikelnr():
-    """Aktualisiert eine Artikelnummer in einer Katalog-CSV-Datei"""
+    """Aktualisiert oder löscht eine Artikelnummer in einer Katalog-CSV-Datei"""
     try:
         req_data = request.json
         catalog_type = req_data.get('catalog_type', '').lower()
         old_artikelnr = req_data.get('old_artikelnr', '').strip()
-        new_artikelnr = req_data.get('new_artikelnr', '').strip()
+        new_artikelnr = req_data.get('new_artikelnr', '').strip()  # Can be empty for deletion
 
-        if not catalog_type or not old_artikelnr or not new_artikelnr:
-            return jsonify({'error': 'Katalogtyp, alte und neue Artikelnummer erforderlich'}), 400
+        if not catalog_type or not old_artikelnr:
+            return jsonify({'error': 'Katalogtyp und alte Artikelnummer erforderlich'}), 400
 
         # Katalog-Verzeichnis bestimmen
         if catalog_type == 'alvaris':
@@ -610,9 +611,11 @@ def update_catalog_artikelnr():
             writer = csv.writer(f, delimiter=';', quoting=csv.QUOTE_MINIMAL)
             writer.writerows(rows)
 
+        message = 'Artikelnummer erfolgreich gelöscht' if not new_artikelnr else 'Artikelnummer erfolgreich aktualisiert'
+
         return jsonify({
             'success': True,
-            'message': f'Artikelnummer erfolgreich aktualisiert',
+            'message': message,
             'old_artikelnr': old_artikelnr,
             'new_artikelnr': new_artikelnr,
             'catalog_file': catalog_file
