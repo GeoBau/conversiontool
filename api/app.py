@@ -155,21 +155,57 @@ def search_all():
                     # Get description
                     description = row_data.get('C', '').replace(';', '\n')
 
-                    # Find image
+                    # Find image - check for Syskomp image first, then Item, Bosch, Alvaris, ASK
                     image_info = None
+                    syskomp_nr = row_data.get('A', '')
+                    item_nr = row_data.get('D', '')
+                    bosch_nr = row_data.get('E', '')
                     alvaris_nr = row_data.get('F', '')
                     ask_nr = row_data.get('H', '')
 
-                    if alvaris_nr and alvaris_nr != '-' and alvaris_nr != 'None':
+                    images_dir = os.path.join(base_dir, 'frontend', 'public', 'images')
+
+                    # Check in order: Syskomp, Item, Bosch, Alvaris, ASK
+                    def check_image_exists(artnr):
+                        if not artnr or artnr == '-' or artnr == 'None':
+                            return False
+                        # Handle pipe-separated values - check first value
+                        first_val = artnr.split('|')[0].strip() if '|' in artnr else artnr
+                        return os.path.exists(os.path.join(images_dir, f'{first_val}.png'))
+
+                    def get_first_artnr(artnr):
+                        if '|' in artnr:
+                            return artnr.split('|')[0].strip()
+                        return artnr
+
+                    if syskomp_nr and check_image_exists(syskomp_nr):
+                        image_info = {
+                            'type': 'syskomp',
+                            'artnr': get_first_artnr(syskomp_nr),
+                            'crop_top_70': False
+                        }
+                    elif item_nr and check_image_exists(item_nr):
+                        image_info = {
+                            'type': 'item',
+                            'artnr': get_first_artnr(item_nr),
+                            'crop_top_70': False
+                        }
+                    elif bosch_nr and check_image_exists(bosch_nr):
+                        image_info = {
+                            'type': 'bosch',
+                            'artnr': get_first_artnr(bosch_nr),
+                            'crop_top_70': False
+                        }
+                    elif alvaris_nr and alvaris_nr != '-' and alvaris_nr != 'None':
                         image_info = {
                             'type': 'alvaris',
-                            'artnr': alvaris_nr,
+                            'artnr': get_first_artnr(alvaris_nr),
                             'crop_top_70': True
                         }
                     elif ask_nr and ask_nr != '-' and ask_nr != 'None':
                         image_info = {
                             'type': 'ask',
-                            'artnr': ask_nr,
+                            'artnr': get_first_artnr(ask_nr),
                             'crop_top_70': False
                         }
 
@@ -451,6 +487,7 @@ def update_entry():
         syskomp_neu = req_data.get('syskomp_neu', '').strip()
         col = req_data.get('col', '').upper()
         value = req_data.get('value', '').strip()
+        append_mode = req_data.get('append', False)  # If true, append with | instead of replace
 
         if not syskomp_neu or not col:
             return jsonify({'error': 'Syskomp neu und Spalte erforderlich'}), 400
@@ -467,8 +504,23 @@ def update_entry():
         if col_index < 0 or col_index > 7:
             return jsonify({'error': 'Ungültige Spalte'}), 400
 
+        # If append mode, get current value and append
+        final_value = value
+        if append_mode and value:
+            # Get current value from data
+            row_list = data.get('A', {}).get(syskomp_neu, [])
+            if row_list:
+                current_value = row_list[0].get(col, '')
+                if current_value and current_value != '-':
+                    # Check if value already exists in pipe-separated list
+                    existing_values = [v.strip() for v in current_value.split('|')]
+                    if value not in existing_values:
+                        final_value = f"{current_value}|{value}"
+                    else:
+                        final_value = current_value  # Already exists, don't duplicate
+
         # CSV aktualisieren
-        success, result_message = csv_manager.update_cell(syskomp_neu, col_index, value)
+        success, result_message = csv_manager.update_cell(syskomp_neu, col_index, final_value)
 
         if not success:
             return jsonify({'error': result_message}), 500
@@ -481,7 +533,7 @@ def update_entry():
             'message': result_message,
             'syskomp_neu': syskomp_neu,
             'col': col,
-            'value': value
+            'value': final_value
         })
 
     except Exception as e:
@@ -542,12 +594,19 @@ def create_entry():
         req_data = request.json
         syskomp_neu = req_data.get('syskomp_neu', '').strip()
         syskomp_alt = req_data.get('syskomp_alt', '').strip()
-        catalog_artnr = req_data.get('catalog_artnr', '').strip()
         description = req_data.get('description', '').strip()
-        catalog_type = req_data.get('catalog_type', '').lower()  # 'alvaris', 'bosch', 'item', 'ask'
+        item = req_data.get('item', '').strip()
+        bosch = req_data.get('bosch', '').strip()
+        alvaris_artnr = req_data.get('alvaris_artnr', '').strip()
+        alvaris_matnr = req_data.get('alvaris_matnr', '').strip()
+        ask = req_data.get('ask', '').strip()
 
-        if not syskomp_neu or not catalog_artnr:
-            return jsonify({'error': 'Syskomp neu und Katalog-Artikelnummer erforderlich'}), 400
+        # Legacy support for catalog_artnr
+        catalog_artnr = req_data.get('catalog_artnr', '').strip()
+        catalog_type = req_data.get('catalog_type', '').lower()
+
+        if not syskomp_neu:
+            return jsonify({'error': 'Syskomp neu ist erforderlich'}), 400
 
         # Validiere Format für Syskomp neu (erforderlich)
         if len(syskomp_neu) != 9 or not syskomp_neu.startswith('1') or not syskomp_neu.isdigit():
@@ -558,25 +617,27 @@ def create_entry():
             if len(syskomp_alt) != 9 or (not syskomp_alt.startswith('2') and not syskomp_alt.startswith('4')) or not syskomp_alt.isdigit():
                 return jsonify({'error': 'Syskomp alt: 9 Ziffern, beginnt mit 2 oder 4'}), 400
 
-        # Bestimme die richtige Spalte basierend auf Katalog-Typ
-        col_index_map = {
-            'alvaris': 5,  # Column F (AlvarisArtnr)
-            'bosch': 4,    # Column E
-            'item': 3,     # Column D
-            'ask': 7       # Column H
-        }
-
-        catalog_col_index = col_index_map.get(catalog_type, 7)  # Default to ASK (H)
-
-        # Lese die CSV und füge neue Zeile hinzu
-        csv_path = os.path.join(base_dir, 'Portfolio_Syskomp_pA.csv')
-
         # Neue Zeile erstellen (8 Spalten: A-H)
         new_row = [''] * 8
         new_row[0] = syskomp_neu  # Column A
         new_row[1] = syskomp_alt  # Column B
         new_row[2] = description  # Column C
-        new_row[catalog_col_index] = catalog_artnr  # Katalog-Nummer in richtige Spalte
+        new_row[3] = item         # Column D
+        new_row[4] = bosch        # Column E
+        new_row[5] = alvaris_artnr  # Column F
+        new_row[6] = alvaris_matnr  # Column G
+        new_row[7] = ask          # Column H
+
+        # Legacy: catalog_artnr in richtige Spalte
+        if catalog_artnr and catalog_type:
+            col_index_map = {
+                'alvaris': 5,
+                'bosch': 4,
+                'item': 3,
+                'ask': 7
+            }
+            catalog_col_index = col_index_map.get(catalog_type, 7)
+            new_row[catalog_col_index] = catalog_artnr
 
         # CSV aktualisieren
         success, message = csv_manager.append_row(new_row)
@@ -590,14 +651,63 @@ def create_entry():
         return jsonify({
             'success': True,
             'message': 'Neuer Eintrag erfolgreich erstellt',
-            'syskomp_neu': syskomp_neu,
-            'syskomp_alt': syskomp_alt,
-            'catalog_artnr': catalog_artnr,
-            'description': description
+            'syskomp_neu': syskomp_neu
         })
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/api/upload-image', methods=['POST'])
+def upload_image():
+    """Lädt ein Produktbild hoch und speichert es mit der Syskomp-Nummer als Name"""
+    try:
+        if 'image' not in request.files:
+            return jsonify({'error': 'Kein Bild übermittelt'}), 400
+
+        image_file = request.files['image']
+        syskomp_neu = request.form.get('syskomp_neu', '').strip()
+
+        if not syskomp_neu:
+            return jsonify({'error': 'Syskomp-Nummer erforderlich'}), 400
+
+        if not image_file.filename:
+            return jsonify({'error': 'Keine Datei ausgewählt'}), 400
+
+        # Validate file type
+        allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        file_ext = image_file.filename.rsplit('.', 1)[-1].lower() if '.' in image_file.filename else ''
+        if file_ext not in allowed_extensions:
+            return jsonify({'error': f'Ungültiger Dateityp. Erlaubt: {", ".join(allowed_extensions)}'}), 400
+
+        # Save to frontend/public/images with syskomp_neu as filename
+        images_dir = os.path.join(base_dir, 'frontend', 'public', 'images')
+        os.makedirs(images_dir, exist_ok=True)
+
+        # Always save as PNG for consistency
+        image_path = os.path.join(images_dir, f'{syskomp_neu}.png')
+
+        # Convert to PNG if needed (requires PIL)
+        try:
+            from PIL import Image
+            img = Image.open(image_file)
+            # Convert to RGB if necessary (e.g., for RGBA or P mode images)
+            if img.mode in ('RGBA', 'P'):
+                img = img.convert('RGB')
+            img.save(image_path, 'PNG')
+        except ImportError:
+            # If PIL not available, just save as-is
+            image_file.save(image_path)
+
+        return jsonify({
+            'success': True,
+            'message': 'Bild erfolgreich hochgeladen',
+            'image_path': f'/images/{syskomp_neu}.png'
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 @app.route('/api/update-catalog-artikelnr', methods=['POST'])
 def update_catalog_artikelnr():
@@ -728,7 +838,8 @@ def load_catalog():
         is_alvaris = 'ALVARIS' in parent_dir.upper() or 'alvaris' in catalog_name.lower()
 
         # Check which article numbers already exist in Portfolio CSV and store their Syskomp numbers
-        existing_numbers = {}  # {artikelnummer: {'syskomp_neu': ..., 'syskomp_alt': ...}}
+        # Now supports multiple Syskomp numbers per article (list instead of single dict)
+        existing_numbers = {}  # {artikelnummer: [{'syskomp_neu': ..., 'syskomp_alt': ..., 'other_catalog_nrs': {...}}, ...]}
         portfolio_path = os.path.join(os.path.dirname(__file__), '..', 'Portfolio_Syskomp_pA.csv')
         if os.path.exists(portfolio_path):
             with open(portfolio_path, 'r', encoding='utf-8') as pf:
@@ -737,36 +848,61 @@ def load_catalog():
                 for row in portfolio_reader:
                     syskomp_neu = row[0].strip() if len(row) > 0 else ''
                     syskomp_alt = row[1].strip() if len(row) > 1 else ''
+                    item_nr = row[3].strip() if len(row) > 3 else ''
+                    bosch_nr = row[4].strip() if len(row) > 4 else ''
+                    alvaris_artnr = row[5].strip() if len(row) > 5 else ''
+                    alvaris_matnr = row[6].strip() if len(row) > 6 else ''
+                    ask_nr = row[7].strip() if len(row) > 7 else ''
+
+                    # Build other catalog numbers dict
+                    other_catalog_nrs = {
+                        'item': item_nr,
+                        'bosch': bosch_nr,
+                        'alvaris_artnr': alvaris_artnr,
+                        'alvaris_matnr': alvaris_matnr,
+                        'ask': ask_nr
+                    }
+
+                    mapping_info = {
+                        'syskomp_neu': syskomp_neu,
+                        'syskomp_alt': syskomp_alt,
+                        'other_catalog_nrs': other_catalog_nrs
+                    }
+
+                    # Helper to add mapping for an article number (handles pipe-separated values)
+                    def add_mapping(artnr_field):
+                        if not artnr_field:
+                            return
+                        # Handle pipe-separated values
+                        for artnr in artnr_field.split('|'):
+                            artnr = artnr.strip()
+                            if artnr:
+                                if artnr not in existing_numbers:
+                                    existing_numbers[artnr] = []
+                                # Avoid duplicates
+                                if not any(m['syskomp_neu'] == syskomp_neu for m in existing_numbers[artnr]):
+                                    existing_numbers[artnr].append(mapping_info.copy())
 
                     if is_alvaris:
-                        # Alvaris: Check column F (AlvarisArtnr, index 5) and G (AlvarisMatnr, index 6)
-                        if len(row) > 5 and row[5]:
-                            existing_numbers[row[5].strip()] = {
-                                'syskomp_neu': syskomp_neu,
-                                'syskomp_alt': syskomp_alt
-                            }
-                        if len(row) > 6 and row[6]:
-                            existing_numbers[row[6].strip()] = {
-                                'syskomp_neu': syskomp_neu,
-                                'syskomp_alt': syskomp_alt
-                            }
+                        # Alvaris: Check column F (AlvarisArtnr) and G (AlvarisMatnr)
+                        add_mapping(alvaris_artnr)
+                        add_mapping(alvaris_matnr)
                     else:
-                        # ASK: Check column H (index 7)
-                        if len(row) > 7 and row[7]:
-                            existing_numbers[row[7].strip()] = {
-                                'syskomp_neu': syskomp_neu,
-                                'syskomp_alt': syskomp_alt
-                            }
+                        # ASK: Check column H
+                        add_mapping(ask_nr)
 
-        # Mark products that already exist and add Syskomp numbers
+        # Mark products that already exist and add Syskomp numbers (now as list)
         for product in products:
             art_nr = product.get('Artikelnummer', '').strip()
             if art_nr in existing_numbers:
                 product['already_mapped'] = True
-                product['mapped_syskomp_neu'] = existing_numbers[art_nr]['syskomp_neu']
-                product['mapped_syskomp_alt'] = existing_numbers[art_nr]['syskomp_alt']
+                product['existing_mappings'] = existing_numbers[art_nr]  # List of all mappings
+                # For backwards compatibility, also set single values from first mapping
+                product['mapped_syskomp_neu'] = existing_numbers[art_nr][0]['syskomp_neu']
+                product['mapped_syskomp_alt'] = existing_numbers[art_nr][0]['syskomp_alt']
             else:
                 product['already_mapped'] = False
+                product['existing_mappings'] = []
 
         return jsonify({
             'success': True,

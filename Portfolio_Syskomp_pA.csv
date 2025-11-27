@@ -1529,13 +1529,12 @@
 140000064;403538555;"Dämpfungsplatte für;Gelenkstellfuß 30 Material:;thermoplastischer Elastomer;";0.0.434.50;3842538555;1010071;ANTSTE8.30;
 140000065;403538556;"Dämpfungsplatte für;Gelenkstellfuß 40 Material:;thermoplastischer Elastomer;";0.0.265.70;3842538556;1010070;ANTSTE40;
 140000066;403538557;"Dämpfungsplatte für;Gelenkstellfuß 45 Material:;thermoplastischer Elastomer;";;3842538557;;;
-140000067;403538558;"Dämpfungsplatte für;Gelenkstellfuß 60 Material:;thermoplastischer Elastomer;";0.0.439.33;3842538558;1010072;ANTSTE8.60;1234567|1234568
+140000070;403538558;"Dämpfungsplatte für;Gelenkstellfuß 60 Material:;thermoplastischer Elastomer;";;3842538558;1010072;ANTSTE8.60;1234567|1234568
 ;403538559;"Dämpfungsplatte für;Gelenkstellfuß 80 Material:;thermoplastischer Elastomer;";0.0.439.33;3842538559;1010073;ANTSTE80;
-140000069;403538676;"45 Teller für Gelenkstellfüße;Kugel 1 Material:;Zinkdruckguss schwarz pulverb.;Tragkraft: 3000 kg";;3842538676;;;
-140000070;403538680;"Fußplatte 80 ovel mit;Anschraubbohrung für;Gelenkstellfuss Kugel 15;Material: Zinkdruckguss";;3842538680;;;
-140000071;403538681;"Teller 40 mit Ausleger für;Gelenkstellfuss Kugel 15;Material: Kunststoff PA,;glaskugelverstärlt schwarz";;;;;
-140000072;403538932;"60 Teller für Gelenkstellfüße;Kugel 1 mit Anschraubbohrung;Material: Zinkdruckguss;schwarz pulverbeschichtet";;3842538932;;;501284
-140000073;403538934;"80 Teller für Gelenkstellfüße;Kugel 1 mit Anschraubbohrung;Material: Zinkdruckguss;schwarz pulverbeschichtet";;3842538934;;;501286
+140000070;403538680;"Fußplatte 80 ovel mit;Anschraubbohrung für;Gelenkstellfuss Kugel 15;Material: Zinkdruckguss";0.0.439.33;3842538680;;;
+140000070;403538681;"Teller 40 mit Ausleger für;Gelenkstellfuss Kugel 15;Material: Kunststoff PA,;glaskugelverstärlt schwarz";;;;;
+140000072;403538932;"60 Teller für Gelenkstellfüße;Kugel 1 mit Anschraubbohrung;Material: Zinkdruckguss;schwarz pulverbeschichtet";0.0.465.80;3842538932;;;501284|647234
+140000073;403538934;"80 Teller für Gelenkstellfüße;Kugel 1 mit Anschraubbohrung;Material: Zinkdruckguss;schwarz pulverbeschichtet";;3842538932;;;501286
 140000074;404532235;"Gelenk 40 Nut 10 Zinkdruckguss;alufarbig inkl.;Befestigungssatz alufarbig;oberflächenbeschichtet";;3842543401;;;414009
 140000075;404542329;"Sicherungsring für Gewinde M5;Material: Kunststoff PA natur;;";0.0.627.70;3842542329;-;-;
 140000076;404542330;"Sicherungsring für Gewinde M6;Material: Kunststoff PA natur;;";0.0.627.69;3842542330;-;-;
@@ -2067,7 +2066,7 @@
 140000863;481992400;"Aluminiumprofil 30x30 3N;Nut 8;;";;3842992400;;;20101030
 140000864;481992430;"Aluminiumprofil 30x45;Nut 8/10;;";;3842992430;;;20101610
 140000865;481992457;"Aluminiumprofil 30x60;Nut 8;;";;3842992457;;;20101103
-140000866;481992476;"Aluminiumprofil 11x20;Nut 8;;";;3842992476;;;20100100
+140000866;481992476;"Aluminiumprofil 11x20;Nut 8;;";;3842992476;;;20100100|20100101|20100103
 140000867;481992493;"Rahmenprofil 22,5x30;Nut 8;;";;3842992493;;;20102600
 140000868;481992896;"Aluminiumprofil 30x30 R;Nut 8;;";;3842992896;;;20100900
 140000869;481992934;"Streckenprofil SP1;Nut 8;;";;3842992934;;;
@@ -2078,7 +2077,7 @@
 140000874;481993011;"Aluminiumprofil 30x45°;Nut 8;;";;3842993011;;;20101080
 140000875;481993012;"Aluminiumprofil 30X60°;Nut 8;;";;3842993012;;;20101090
 140000876;481993016;"Aluminiumprofil 30x60x60;Nut 8;;";;3842993016;;;20107600
-140000877;481993411;"Einhängeprofil 15x30;Nut 8;;";;3842993411;;;20100200
+140000877;481993411;"Einhängeprofil 15x30;Nut 8;;";;3842993411;;;20100200|20100201
 140000878;481993420;"Aluminiumprofil 30x60 4N;Nut 8;;";;3842993420;;;
 140000879;481993762;"Aluminiumprofil 30x90;Nut 8;;";;3842993762;;;
 140000880;482200160;"Rhombusmutter M3, Nut 8,;Material: Zinkdruckguss;;";;;;;
@@ -2201,3 +2200,5 @@
 140000999;;"Abdeckkappe 90x180, Nut 10,;schwarz, ESD, t=4 mm,;Material: PA6GF30;bestehend aus 2x Abdk. 90x90";;;;;
 140001000;;"Aluminiumprofil 40x80L 2N;Nut 10;;";;;;;
 140001001;;"Aluminiumprofil 40x80L 2N;Nut 10;6 St. x 6000mm;";;;;;
+199999999;;test;;;;;
+188888888;;;;;;;

@@ -7,6 +7,18 @@ interface Catalog {
   type: string
 }
 
+interface ExistingMapping {
+  syskomp_neu: string
+  syskomp_alt: string
+  other_catalog_nrs: {
+    item: string
+    bosch: string
+    alvaris_artnr: string
+    alvaris_matnr: string
+    ask: string
+  }
+}
+
 interface CatalogProduct {
   Artikelnummer: string
   Beschreibung: string
@@ -15,6 +27,7 @@ interface CatalogProduct {
   already_mapped?: boolean
   mapped_syskomp_neu?: string
   mapped_syskomp_alt?: string
+  existing_mappings?: ExistingMapping[]  // All existing mappings for this article
 }
 
 interface PortfolioMatch {
@@ -311,14 +324,19 @@ const CatalogMapper = () => {
           body: JSON.stringify({
             syskomp_neu: syskompNummer,
             col: col,
-            value: currentProduct.Artikelnummer
+            value: currentProduct.Artikelnummer,
+            append: true  // Append with | if value already exists
           }),
         })
 
+        const responseData = await response.json()
+
         if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || 'Fehler beim Speichern')
+          throw new Error(responseData.error || 'Fehler beim Speichern')
         }
+
+        // Get the updated catalog numbers from response (value contains the full pipe-separated list)
+        const updatedCatalogNrs = responseData.value || currentProduct.Artikelnummer
 
         // Mark product as already mapped in the local state and update Syskomp numbers
         const updatedProducts = [...catalogProducts]
@@ -334,12 +352,59 @@ const CatalogMapper = () => {
           syskompAlt = manualSyskompAlt || ''
         }
 
+        // Create new mapping entry
+        const newMapping = {
+          syskomp_neu: syskompNummer,
+          syskomp_alt: syskompAlt,
+          other_catalog_nrs: {
+            item: '',
+            bosch: '',
+            alvaris_artnr: catalogType === 'alvaris' ? updatedCatalogNrs : '',
+            alvaris_matnr: '',
+            ask: catalogType === 'ask' ? updatedCatalogNrs : ''
+          }
+        }
+
+        // Update current product - add to existing mappings or create new
+        const currentMappings = updatedProducts[currentIndex].existing_mappings || []
+        const existingMappingIdx = currentMappings.findIndex(m => m.syskomp_neu === syskompNummer)
+
+        let newMappings
+        if (existingMappingIdx >= 0) {
+          // Update existing mapping with new catalog numbers
+          newMappings = [...currentMappings]
+          newMappings[existingMappingIdx] = newMapping
+        } else {
+          // Add new mapping
+          newMappings = [...currentMappings, newMapping]
+        }
+
         updatedProducts[currentIndex] = {
           ...updatedProducts[currentIndex],
           already_mapped: true,
           mapped_syskomp_neu: syskompNummer,
-          mapped_syskomp_alt: syskompAlt
+          mapped_syskomp_alt: syskompAlt,
+          existing_mappings: newMappings
         }
+
+        // Also update all other products that have this Syskomp number in their mappings
+        for (let i = 0; i < updatedProducts.length; i++) {
+          if (i !== currentIndex) {
+            const productMappings = updatedProducts[i].existing_mappings || []
+            const mappingIdx = productMappings.findIndex(m => m.syskomp_neu === syskompNummer)
+
+            if (mappingIdx >= 0) {
+              // Update the catalog numbers for this Syskomp
+              const updatedMappings = [...productMappings]
+              updatedMappings[mappingIdx] = newMapping
+              updatedProducts[i] = {
+                ...updatedProducts[i],
+                existing_mappings: updatedMappings
+              }
+            }
+          }
+        }
+
         setCatalogProducts(updatedProducts)
 
         // Save for undo
@@ -606,17 +671,39 @@ const CatalogMapper = () => {
 
               <div style={{ marginBottom: '15px' }}>
                 <strong>Art. Nr:</strong> <span style={{ color: currentProduct.already_mapped ? '#c62828' : 'inherit', fontWeight: currentProduct.already_mapped ? 'bold' : 'normal' }}>{currentProduct.Artikelnummer}</span>
-                {currentProduct.already_mapped && (
+                {currentProduct.already_mapped && currentProduct.existing_mappings && currentProduct.existing_mappings.length > 0 && (
                   <div style={{ marginTop: '4px', fontSize: '10px', color: '#c62828' }}>
                     <div>(bereits zugeordnet)</div>
-                    {currentProduct.mapped_syskomp_neu && (
-                      <div style={{ marginTop: '2px' }}>
-                        <strong>Syskomp neu:</strong> {currentProduct.mapped_syskomp_neu}
-                        {currentProduct.mapped_syskomp_alt && currentProduct.mapped_syskomp_alt !== '-' && (
-                          <span> / <strong>alt:</strong> {currentProduct.mapped_syskomp_alt}</span>
+                    {/* Show ALL existing mappings with their catalog numbers */}
+                    {currentProduct.existing_mappings.map((mapping, idx) => (
+                      <div key={idx} style={{ marginTop: idx > 0 ? '6px' : '2px', paddingTop: idx > 0 ? '4px' : '0', borderTop: idx > 0 ? '1px dashed #ffcdd2' : 'none' }}>
+                        <div>
+                          <strong>Syskomp neu:</strong> {mapping.syskomp_neu}
+                          {mapping.syskomp_alt && mapping.syskomp_alt !== '-' && (
+                            <span> / <strong>alt:</strong> {mapping.syskomp_alt}</span>
+                          )}
+                        </div>
+                        {/* Show catalog numbers for this mapping */}
+                        {mapping.other_catalog_nrs && (
+                          <div style={{ marginTop: '2px', color: '#666', fontSize: '9px' }}>
+                            {catalogType === 'ask' && mapping.other_catalog_nrs.ask && mapping.other_catalog_nrs.ask !== '-' && (
+                              <div>ASK: {mapping.other_catalog_nrs.ask.split('|').map((nr, i, arr) => (
+                                <span key={i} style={{ backgroundColor: nr.trim() === currentProduct.Artikelnummer ? '#ffeb3b' : 'transparent', padding: '0 2px' }}>
+                                  {nr.trim()}{i < arr.length - 1 ? ' | ' : ''}
+                                </span>
+                              ))}</div>
+                            )}
+                            {catalogType === 'alvaris' && mapping.other_catalog_nrs.alvaris_artnr && mapping.other_catalog_nrs.alvaris_artnr !== '-' && (
+                              <div>Alvaris: {mapping.other_catalog_nrs.alvaris_artnr.split('|').map((nr, i, arr) => (
+                                <span key={i} style={{ backgroundColor: nr.trim() === currentProduct.Artikelnummer ? '#ffeb3b' : 'transparent', padding: '0 2px' }}>
+                                  {nr.trim()}{i < arr.length - 1 ? ' | ' : ''}
+                                </span>
+                              ))}</div>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
+                    ))}
                   </div>
                 )}
               </div>

@@ -78,6 +78,35 @@ const PortfolioConversion = () => {
   const [stats, setStats] = useState<StatsData | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // New entry form states
+  const [showNewEntryForm, setShowNewEntryForm] = useState(false)
+  const [newEntry, setNewEntry] = useState({
+    syskomp_neu: '',
+    syskomp_alt: '',
+    description: '',
+    item: '',
+    bosch: '',
+    alvaris_artnr: '',
+    alvaris_matnr: '',
+    ask: ''
+  })
+  const [newEntryLoading, setNewEntryLoading] = useState(false)
+  const [newEntryError, setNewEntryError] = useState<string | null>(null)
+  const [newEntrySuccess, setNewEntrySuccess] = useState<string | null>(null)
+  const [newEntryImage, setNewEntryImage] = useState<File | null>(null)
+  const [newEntryImagePreview, setNewEntryImagePreview] = useState<string | null>(null)
+
+  // Edit description states (per syskomp_neu)
+  const [editingDescription, setEditingDescription] = useState<string | null>(null)
+  const [descriptionValue, setDescriptionValue] = useState('')
+  const [descriptionSaving, setDescriptionSaving] = useState(false)
+
+  // Edit image states (per syskomp_neu)
+  const [editingImage, setEditingImage] = useState<string | null>(null)
+  const [editImageFile, setEditImageFile] = useState<File | null>(null)
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(null)
+  const [imageSaving, setImageSaving] = useState(false)
+
   // Fetch stats on mount
   useEffect(() => {
     const fetchStats = async () => {
@@ -136,6 +165,27 @@ const PortfolioConversion = () => {
 
   const handleUpdateEntry = async (syskomp_neu: string, col: string, value: string) => {
     try {
+      // If deleting Syskomp neu (column A), delete the entire row
+      if (col === 'A' && !value.trim()) {
+        const response = await fetch(`${API_URL}/delete-row`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ syskomp_neu }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Fehler beim Löschen der Zeile')
+        }
+
+        // Clear result after deletion
+        setResult(null)
+        setSearchNumber('')
+        return
+      }
+
       const response = await fetch(`${API_URL}/update-entry`, {
         method: 'POST',
         headers: {
@@ -167,32 +217,215 @@ const PortfolioConversion = () => {
     }
   }
 
-  // Handle delete row
-  const handleDeleteRow = async (syskomp_neu: string) => {
-    if (!confirm(`Möchten Sie die gesamte Zeile für Syskomp ${syskomp_neu} wirklich löschen?`)) {
+  // Handle image selection for new entry (from file input or paste)
+  const processImageFile = (file: File) => {
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      setNewEntryError('Bitte nur Bilddateien auswählen (PNG, JPG, etc.)')
+      return
+    }
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setNewEntryError('Bild darf max. 5MB groß sein')
+      return
+    }
+    setNewEntryImage(file)
+    // Create preview
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setNewEntryImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+    setNewEntryError(null)
+  }
+
+  const handleNewEntryImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      processImageFile(file)
+    }
+  }
+
+  // Handle paste event for screenshot
+  const handlePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) {
+          e.preventDefault()
+          processImageFile(file)
+          break
+        }
+      }
+    }
+  }
+
+  // Handle create new entry
+  const handleCreateEntry = async () => {
+    if (!newEntry.syskomp_neu.trim()) {
+      setNewEntryError('Syskomp neu ist erforderlich')
       return
     }
 
+    setNewEntryLoading(true)
+    setNewEntryError(null)
+    setNewEntrySuccess(null)
+
     try {
-      const response = await fetch(`${API_URL}/delete-row`, {
+      const response = await fetch(`${API_URL}/create-entry`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ syskomp_neu }),
+        body: JSON.stringify(newEntry),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Fehler beim Löschen')
+        throw new Error(errorData.error || 'Fehler beim Erstellen')
       }
 
-      // Nach erfolgreichem Löschen neu suchen
-      await handleSearch()
+      const data = await response.json()
+
+      // Upload image if selected
+      if (newEntryImage) {
+        const formData = new FormData()
+        formData.append('image', newEntryImage)
+        formData.append('syskomp_neu', data.syskomp_neu)
+
+        const imageResponse = await fetch(`${API_URL}/upload-image`, {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!imageResponse.ok) {
+          console.error('Bild-Upload fehlgeschlagen')
+        }
+      }
+
+      setNewEntrySuccess(`Eintrag ${data.syskomp_neu} erfolgreich erstellt!`)
+
+      // Reset form
+      setNewEntry({
+        syskomp_neu: '',
+        syskomp_alt: '',
+        description: '',
+        item: '',
+        bosch: '',
+        alvaris_artnr: '',
+        alvaris_matnr: '',
+        ask: ''
+      })
+      setNewEntryImage(null)
+      setNewEntryImagePreview(null)
+
+      // Search for the new entry
+      setSearchNumber(data.syskomp_neu)
+      setTimeout(() => handleSearch(), 500)
 
     } catch (err: any) {
-      setError(err.message || 'Fehler beim Löschen der Zeile')
+      setNewEntryError(err.message || 'Fehler beim Erstellen des Eintrags')
+    } finally {
+      setNewEntryLoading(false)
     }
+  }
+
+  // Handle description edit
+  const handleEditDescription = (syskomp_neu: string, currentDescription: string) => {
+    setEditingDescription(syskomp_neu)
+    setDescriptionValue(currentDescription || '')
+  }
+
+  const handleSaveDescription = async (syskomp_neu: string) => {
+    setDescriptionSaving(true)
+    try {
+      await handleUpdateEntry(syskomp_neu, 'C', descriptionValue)
+      setEditingDescription(null)
+      setDescriptionValue('')
+    } catch (err) {
+      console.error('Failed to save description:', err)
+    } finally {
+      setDescriptionSaving(false)
+    }
+  }
+
+  const handleCancelDescription = () => {
+    setEditingDescription(null)
+    setDescriptionValue('')
+  }
+
+  // Handle image edit
+  const handleEditImage = (syskomp_neu: string) => {
+    setEditingImage(syskomp_neu)
+    setEditImageFile(null)
+    setEditImagePreview(null)
+  }
+
+  const processEditImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      return
+    }
+    setEditImageFile(file)
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setEditImagePreview(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const handleEditImagePaste = (e: React.ClipboardEvent) => {
+    const items = e.clipboardData?.items
+    if (!items) return
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        const file = items[i].getAsFile()
+        if (file) {
+          e.preventDefault()
+          processEditImageFile(file)
+          break
+        }
+      }
+    }
+  }
+
+  const handleSaveImage = async (syskomp_neu: string) => {
+    if (!editImageFile) return
+
+    setImageSaving(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', editImageFile)
+      formData.append('syskomp_neu', syskomp_neu)
+
+      const response = await fetch(`${API_URL}/upload-image`, {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (response.ok) {
+        setEditingImage(null)
+        setEditImageFile(null)
+        setEditImagePreview(null)
+        // Refresh search to show new image
+        await handleSearch()
+      }
+    } catch (err) {
+      console.error('Failed to save image:', err)
+    } finally {
+      setImageSaving(false)
+    }
+  }
+
+  const handleCancelImage = () => {
+    setEditingImage(null)
+    setEditImageFile(null)
+    setEditImagePreview(null)
   }
 
   // Handle Ctrl+Click on any number to search for it
@@ -610,17 +843,39 @@ const PortfolioConversion = () => {
       {/* Tab Navigation */}
       <div className="tab-navigation" style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #ccc', paddingBottom: '10px' }}>
         <button
-          onClick={() => setCurrentTab('search')}
+          onClick={() => {
+            setCurrentTab('search')
+            setShowNewEntryForm(false)
+          }}
           style={{
             padding: '10px 20px',
-            background: currentTab === 'search' ? '#007bff' : '#f0f0f0',
-            color: currentTab === 'search' ? 'white' : 'black',
+            background: currentTab === 'search' && !showNewEntryForm ? '#007bff' : '#f0f0f0',
+            color: currentTab === 'search' && !showNewEntryForm ? 'white' : 'black',
             border: 'none',
             cursor: 'pointer',
-            fontWeight: currentTab === 'search' ? 'bold' : 'normal'
+            fontWeight: currentTab === 'search' && !showNewEntryForm ? 'bold' : 'normal'
           }}
         >
           Suche
+        </button>
+        <button
+          onClick={() => {
+            setCurrentTab('search')
+            setShowNewEntryForm(true)
+            setSearchNumber('')
+            setResult(null)
+            setError(null)
+          }}
+          style={{
+            padding: '10px 20px',
+            background: showNewEntryForm && currentTab === 'search' ? '#28a745' : '#f0f0f0',
+            color: showNewEntryForm && currentTab === 'search' ? 'white' : 'black',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: showNewEntryForm && currentTab === 'search' ? 'bold' : 'normal'
+          }}
+        >
+          + Neuer Eintrag
         </button>
         <button
           onClick={() => setCurrentTab('batch')}
@@ -658,7 +913,7 @@ const PortfolioConversion = () => {
         <div className="tab-content">
           {currentTab === 'search' && (
             <div className="section single-section">
-              <h2>Aritkelnummersuche <br></br>(über alle Kataloge Bosch, Item, Alvaris, Ask)</h2>
+              <h2>Artikelnummersuche (über alle Kataloge Bosch, Item, Alvaris, Ask)</h2>
 
           <div className="input-row">
             <input
@@ -667,6 +922,7 @@ const PortfolioConversion = () => {
               onChange={(e) => setSearchNumber(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Nummer eingeben"
+              style={{ flex: 1 }}
               className="compact-input"
             />
             <button onClick={handleSearch} disabled={loading} className="compact-button">
@@ -675,6 +931,225 @@ const PortfolioConversion = () => {
           </div>
 
           {error && <div className="error-msg">{error}</div>}
+
+          {/* New Entry Form */}
+          {showNewEntryForm && (
+            <div style={{
+              border: '1px solid #28a745',
+              borderRadius: '6px',
+              padding: '15px',
+              marginBottom: '20px',
+              background: '#f8fff8'
+            }}>
+              <h3 style={{ marginTop: 0, marginBottom: '15px', color: '#28a745' }}>Neuen Syskomp-Eintrag erstellen</h3>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>
+                    Syskomp neu * <span style={{ fontSize: '0.8em', color: '#666' }}>(9 Ziffern, beginnt mit 1)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newEntry.syskomp_neu}
+                    onChange={(e) => setNewEntry({ ...newEntry, syskomp_neu: e.target.value })}
+                    placeholder="z.B. 110000123"
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>
+                    Syskomp alt <span style={{ fontSize: '0.8em', color: '#666' }}>(9 Ziffern, beginnt mit 2 oder 4)</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newEntry.syskomp_alt}
+                    onChange={(e) => setNewEntry({ ...newEntry, syskomp_alt: e.target.value })}
+                    placeholder="z.B. 210000123"
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Beschreibung</label>
+                <textarea
+                  value={newEntry.description}
+                  onChange={(e) => setNewEntry({ ...newEntry, description: e.target.value })}
+                  placeholder="Produktbeschreibung eingeben..."
+                  rows={3}
+                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Item <span style={{ fontSize: '0.8em', color: '#666' }}>(z.B. 0.0.479.76)</span></label>
+                  <input
+                    type="text"
+                    value={newEntry.item}
+                    onChange={(e) => setNewEntry({ ...newEntry, item: e.target.value })}
+                    placeholder="0.0.xxx.xx"
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Bosch <span style={{ fontSize: '0.8em', color: '#666' }}>(10 Ziffern)</span></label>
+                  <input
+                    type="text"
+                    value={newEntry.bosch}
+                    onChange={(e) => setNewEntry({ ...newEntry, bosch: e.target.value })}
+                    placeholder="0820055051"
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Alvaris Artnr <span style={{ fontSize: '0.8em', color: '#666' }}>(7 Ziffern)</span></label>
+                  <input
+                    type="text"
+                    value={newEntry.alvaris_artnr}
+                    onChange={(e) => setNewEntry({ ...newEntry, alvaris_artnr: e.target.value })}
+                    placeholder="1010072"
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>Alvaris Matnr <span style={{ fontSize: '0.8em', color: '#666' }}>(max 10, mit Buchstaben)</span></label>
+                  <input
+                    type="text"
+                    value={newEntry.alvaris_matnr}
+                    onChange={(e) => setNewEntry({ ...newEntry, alvaris_matnr: e.target.value })}
+                    placeholder="ANTSTEP.60"
+                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>ASK <span style={{ fontSize: '0.8em', color: '#666' }}>(6-8 Ziffern)</span></label>
+                <input
+                  type="text"
+                  value={newEntry.ask}
+                  onChange={(e) => setNewEntry({ ...newEntry, ask: e.target.value })}
+                  placeholder="1234567"
+                  style={{ width: '50%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
+                />
+              </div>
+
+              {/* Bild-Upload mit Paste-Unterstützung */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '4px' }}>
+                  Produktbild <span style={{ fontSize: '0.8em', color: '#666' }}>(optional, max 5MB)</span>
+                </label>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleNewEntryImageSelect}
+                  />
+                  <span style={{ color: '#666', fontSize: '0.85em' }}>oder</span>
+                </div>
+                {/* Paste-Zone für Screenshots */}
+                <div
+                  onPaste={handlePaste}
+                  tabIndex={0}
+                  style={{
+                    border: newEntryImagePreview ? '2px solid #28a745' : '2px dashed #ccc',
+                    borderRadius: '6px',
+                    padding: '20px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    background: newEntryImagePreview ? '#f8fff8' : '#fafafa',
+                    outline: 'none',
+                    transition: 'border-color 0.2s, background 0.2s'
+                  }}
+                  onFocus={(e) => {
+                    if (!newEntryImagePreview) {
+                      e.currentTarget.style.borderColor = '#007bff'
+                      e.currentTarget.style.background = '#f0f7ff'
+                    }
+                  }}
+                  onBlur={(e) => {
+                    if (!newEntryImagePreview) {
+                      e.currentTarget.style.borderColor = '#ccc'
+                      e.currentTarget.style.background = '#fafafa'
+                    }
+                  }}
+                >
+                  {newEntryImagePreview ? (
+                    <div>
+                      <img
+                        src={newEntryImagePreview}
+                        alt="Vorschau"
+                        style={{
+                          maxWidth: '300px',
+                          maxHeight: '200px',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px'
+                        }}
+                      />
+                      <div style={{ marginTop: '10px' }}>
+                        <button
+                          onClick={() => {
+                            setNewEntryImage(null)
+                            setNewEntryImagePreview(null)
+                          }}
+                          style={{
+                            padding: '6px 12px',
+                            background: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '3px',
+                            cursor: 'pointer',
+                            fontSize: '0.9em'
+                          }}
+                        >
+                          Bild entfernen
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ color: '#666' }}>
+                      <div style={{ fontSize: '1.5em', marginBottom: '8px' }}>📋</div>
+                      <div>Hier klicken und <strong>Strg+V</strong> drücken</div>
+                      <div style={{ fontSize: '0.85em', marginTop: '4px' }}>um Screenshot einzufügen</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {newEntryError && (
+                <div style={{ color: '#dc3545', marginBottom: '10px', padding: '8px', background: '#fee', borderRadius: '4px' }}>
+                  {newEntryError}
+                </div>
+              )}
+
+              {newEntrySuccess && (
+                <div style={{ color: '#28a745', marginBottom: '10px', padding: '8px', background: '#efe', borderRadius: '4px' }}>
+                  {newEntrySuccess}
+                </div>
+              )}
+
+              <button
+                onClick={handleCreateEntry}
+                disabled={newEntryLoading || !newEntry.syskomp_neu.trim()}
+                style={{
+                  padding: '10px 24px',
+                  background: newEntryLoading || !newEntry.syskomp_neu.trim() ? '#ccc' : '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: newEntryLoading || !newEntry.syskomp_neu.trim() ? 'not-allowed' : 'pointer',
+                  fontSize: '1em',
+                  fontWeight: 'bold'
+                }}
+              >
+                {newEntryLoading ? 'Erstelle...' : 'Eintrag erstellen'}
+              </button>
+            </div>
+          )}
 
           {result && !result.found && (
             <div className="not-found-msg">
@@ -762,42 +1237,190 @@ const PortfolioConversion = () => {
                       onCtrlClick={handleCtrlClickSearch}
                     />
                   </div>
-                  {match.description && (
-                    <div className="result-row description">
-                      <span className="result-label">Beschreibung:</span>
-                      <span className="result-value">{match.description.split('\n').map((line, i) => (
-                        <div key={i}>{line}</div>
-                      ))}</span>
-                    </div>
-                  )}
-                  {match.image && (
-                    <div className={`result-image ${match.image.crop_top_70 ? 'crop-alvaris' : ''}`}>
-                      <img
-                        src={`/images/${match.image.artnr}.png`}
-                        alt="Produkt"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none'
-                        }}
-                      />
-                    </div>
-                  )}
-                  {/* Zeile löschen Button */}
-                  <div className="result-row" style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
-                    <button
-                      onClick={() => handleDeleteRow(match.syskomp_neu)}
-                      style={{
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        padding: '6px 12px',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '0.9em'
-                      }}
-                      title="Gesamte Zeile aus der CSV löschen"
-                    >
-                      Zeile löschen
-                    </button>
+
+                  {/* Beschreibung - editierbar */}
+                  <div className="result-row description" style={{ marginTop: '10px' }}>
+                    <span className="result-label">Beschreibung:</span>
+                    <span className="result-value" style={{ display: 'block', width: '100%' }}>
+                      {editingDescription === match.syskomp_neu ? (
+                        <div style={{ marginTop: '5px' }}>
+                          <textarea
+                            value={descriptionValue}
+                            onChange={(e) => setDescriptionValue(e.target.value)}
+                            rows={4}
+                            style={{
+                              width: '100%',
+                              padding: '8px',
+                              borderRadius: '4px',
+                              border: '1px solid #ccc',
+                              resize: 'vertical',
+                              fontFamily: 'inherit'
+                            }}
+                            placeholder="Beschreibung eingeben..."
+                          />
+                          <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleSaveDescription(match.syskomp_neu)}
+                              disabled={descriptionSaving}
+                              style={{
+                                padding: '6px 12px',
+                                background: '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: descriptionSaving ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              {descriptionSaving ? 'Speichere...' : 'Speichern'}
+                            </button>
+                            <button
+                              onClick={handleCancelDescription}
+                              disabled={descriptionSaving}
+                              style={{
+                                padding: '6px 12px',
+                                background: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {match.description ? (
+                            <>
+                              {match.description.split('\n').map((line, i) => (
+                                <div key={i}>{line}</div>
+                              ))}
+                              <button
+                                onClick={() => handleEditDescription(match.syskomp_neu, match.description)}
+                                className="add-button"
+                                style={{ marginTop: '5px' }}
+                              >
+                                Ändern
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => handleEditDescription(match.syskomp_neu, '')}
+                              className="add-button"
+                            >
+                              + Hinzufügen
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Bild - editierbar */}
+                  <div className="result-row" style={{ marginTop: '10px' }}>
+                    <span className="result-label">Bild:</span>
+                    <span className="result-value" style={{ display: 'block', width: '100%' }}>
+                      {editingImage === match.syskomp_neu ? (
+                        <div style={{ marginTop: '5px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0]
+                                if (file) processEditImageFile(file)
+                              }}
+                            />
+                            <span style={{ color: '#666', fontSize: '0.85em' }}>oder</span>
+                          </div>
+                          <div
+                            onPaste={handleEditImagePaste}
+                            tabIndex={0}
+                            style={{
+                              border: editImagePreview ? '2px solid #28a745' : '2px dashed #ccc',
+                              borderRadius: '6px',
+                              padding: '15px',
+                              textAlign: 'center',
+                              cursor: 'pointer',
+                              background: editImagePreview ? '#f8fff8' : '#fafafa',
+                              outline: 'none'
+                            }}
+                          >
+                            {editImagePreview ? (
+                              <img
+                                src={editImagePreview}
+                                alt="Vorschau"
+                                style={{ maxWidth: '200px', maxHeight: '150px', borderRadius: '4px' }}
+                              />
+                            ) : (
+                              <div style={{ color: '#666' }}>
+                                <div>Hier klicken + <strong>Strg+V</strong></div>
+                                <div style={{ fontSize: '0.85em' }}>für Screenshot</div>
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                            <button
+                              onClick={() => handleSaveImage(match.syskomp_neu)}
+                              disabled={imageSaving || !editImageFile}
+                              style={{
+                                padding: '6px 12px',
+                                background: imageSaving || !editImageFile ? '#ccc' : '#28a745',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: imageSaving || !editImageFile ? 'not-allowed' : 'pointer'
+                              }}
+                            >
+                              {imageSaving ? 'Speichere...' : 'Speichern'}
+                            </button>
+                            <button
+                              onClick={handleCancelImage}
+                              disabled={imageSaving}
+                              style={{
+                                padding: '6px 12px',
+                                background: '#6c757d',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Abbrechen
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          {match.image ? (
+                            <div className={`result-image ${match.image.crop_top_70 ? 'crop-alvaris' : ''}`}>
+                              <img
+                                src={`/images/${match.image.artnr}.png`}
+                                alt="Produkt"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none'
+                                }}
+                              />
+                              <button
+                                onClick={() => handleEditImage(match.syskomp_neu)}
+                                className="add-button"
+                                style={{ marginTop: '5px', display: 'block' }}
+                              >
+                                Ändern
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => handleEditImage(match.syskomp_neu)}
+                              className="add-button"
+                            >
+                              + Hinzufügen
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </span>
                   </div>
                 </div>
               ))}

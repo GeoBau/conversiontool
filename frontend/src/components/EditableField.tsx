@@ -19,6 +19,11 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [validationStatus, setValidationStatus] = useState<'idle' | 'valid' | 'invalid'>('idle')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false)
+  const [duplicateInfo, setDuplicateInfo] = useState<{ number: string, exists: boolean } | null>(null)
+  const [showNotFoundWarning, setShowNotFoundWarning] = useState(false)
+  const [notFoundNumber, setNotFoundNumber] = useState<string | null>(null)
 
   const isEmpty = !value || value === '-' || value === ''
 
@@ -108,14 +113,54 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
         setValidationStatus('valid')
         setError(null)
       } else {
-        setValidationStatus('invalid')
-        setError(data.message || 'Ungültige Nummer')
+        // Check if it's a "not found" error (URL check failed) for Item/Alvaris
+        const isNotFoundError = (column === 'D' || column === 'F' || column === 'G') &&
+          (data.message?.includes('nicht gefunden') || data.message?.includes('0 Treffer') || data.message?.includes('not found'))
+
+        if (isNotFoundError) {
+          // Show warning dialog instead of error
+          setNotFoundNumber(inputValue.trim())
+          setShowNotFoundWarning(true)
+          setValidationStatus('idle')  // Reset to allow user to choose
+        } else {
+          setValidationStatus('invalid')
+          setError(data.message || 'Ungültige Nummer')
+        }
       }
     } catch (err: any) {
       setError('Validierung fehlgeschlagen')
       setValidationStatus('invalid')
     } finally {
       setValidating(false)
+    }
+  }
+
+  // Handle "not found" warning - user chooses to use the number anyway
+  const handleNotFoundAccept = async () => {
+    setShowNotFoundWarning(false)
+    setNotFoundNumber(null)
+    setValidationStatus('valid')  // Allow saving
+    setError(null)
+  }
+
+  const handleNotFoundCancel = () => {
+    setShowNotFoundWarning(false)
+    setNotFoundNumber(null)
+    setValidationStatus('idle')
+  }
+
+  // Check if Syskomp number already exists
+  const checkSyskompExists = async (number: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_URL}/search`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ number: number.trim() })
+      })
+      const data = await response.json()
+      return data.found === true
+    } catch {
+      return false
     }
   }
 
@@ -133,6 +178,23 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
         }
         return
       }
+
+      // For Syskomp columns (A and B): check if number already exists
+      if (column === 'A' || column === 'B') {
+        const trimmedValue = inputValue.trim()
+        // Only check if value is different from current
+        if (trimmedValue !== value) {
+          setSaving(true)
+          const exists = await checkSyskompExists(trimmedValue)
+          setSaving(false)
+
+          if (exists) {
+            setDuplicateInfo({ number: trimmedValue, exists: true })
+            setShowDuplicateWarning(true)
+            return
+          }
+        }
+      }
     } else {
       if (validationStatus !== 'valid') {
         setError('Bitte zuerst validieren')
@@ -140,6 +202,10 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
       }
     }
 
+    await performSave()
+  }
+
+  const performSave = async () => {
     setSaving(true)
     setError(null)
 
@@ -155,16 +221,28 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm(`Möchten Sie die ${label} "${value}" wirklich löschen?`)) {
-      return
-    }
+  const handleDuplicateCancel = () => {
+    setShowDuplicateWarning(false)
+    setDuplicateInfo(null)
+  }
 
+  const handleDuplicateContinue = async () => {
+    setShowDuplicateWarning(false)
+    setDuplicateInfo(null)
+    await performSave()
+  }
+
+  const handleDeleteClick = () => {
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteConfirm = async () => {
+    setShowDeleteConfirm(false)
     setSaving(true)
     setError(null)
 
     try {
-      await onSave('')  // Save empty string = delete
+      await onSave('')  // Save empty string = delete (for column A, this triggers row deletion)
       setIsEditing(false)
       setInputValue('')
       setValidationStatus('idle')
@@ -173,6 +251,10 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false)
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -204,7 +286,52 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
           <>
             {!isEmpty ? (
               <>
-                {linkUrl ? (
+                {/* Split pipe-separated values and render each clickable */}
+                {value.includes('|') ? (
+                  <span>
+                    {value.split('|').map((singleValue, idx) => {
+                      const trimmedValue = singleValue.trim()
+                      if (!trimmedValue) return null
+                      return (
+                        <span key={idx}>
+                          {idx > 0 && <span style={{ color: '#999', margin: '0 4px' }}>|</span>}
+                          {linkUrl ? (
+                            <a
+                              href={linkUrl.replace(encodeURIComponent(value), encodeURIComponent(trimmedValue))}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="number-link"
+                              onClick={(e) => {
+                                if (e.ctrlKey && onCtrlClick) {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  onCtrlClick(trimmedValue)
+                                }
+                              }}
+                              title={onCtrlClick ? 'Ctrl+Klick zum Suchen' : undefined}
+                            >
+                              {trimmedValue}
+                            </a>
+                          ) : (
+                            <span
+                              onClick={(e) => {
+                                if (e.ctrlKey && onCtrlClick) {
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  onCtrlClick(trimmedValue)
+                                }
+                              }}
+                              style={{ cursor: onCtrlClick ? 'pointer' : undefined }}
+                              title={onCtrlClick ? 'Ctrl+Klick zum Suchen' : undefined}
+                            >
+                              {trimmedValue}
+                            </span>
+                          )}
+                        </span>
+                      )
+                    })}
+                  </span>
+                ) : linkUrl ? (
                   <a
                     href={linkUrl}
                     target="_blank"
@@ -299,11 +426,11 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
             </button>
             {!isEmpty && (
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 disabled={saving || validating}
                 className="delete-button"
                 style={{
-                  backgroundColor: '#ff6b6b',
+                  backgroundColor: '#dc3545',
                   color: 'white',
                   border: 'none',
                   borderRadius: '3px',
@@ -312,9 +439,9 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
                   fontSize: '0.9em',
                   marginLeft: '4px'
                 }}
-                title="Nummer löschen"
+                title={column === 'A' ? 'Ganze Zeile löschen' : 'Nummer löschen'}
               >
-                Löschen
+                {column === 'A' ? 'Zeile löschen' : 'Löschen'}
               </button>
             )}
             <button
@@ -347,6 +474,176 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
           </div>
         )}
       </span>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: column === 'A' ? '#dc3545' : 'white',
+            color: column === 'A' ? 'white' : 'black',
+            padding: '20px 30px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            maxWidth: '400px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '1.1em', marginBottom: '20px' }}>
+              {column === 'A'
+                ? `Möchten Sie die gesamte Zeile für "${value}" wirklich löschen?`
+                : `Möchten Sie die ${label} "${value}" wirklich löschen?`
+              }
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={handleDeleteConfirm}
+                style={{
+                  padding: '8px 20px',
+                  backgroundColor: column === 'A' ? 'white' : '#dc3545',
+                  color: column === 'A' ? '#dc3545' : 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Ja, löschen
+              </button>
+              <button
+                onClick={handleDeleteCancel}
+                style={{
+                  padding: '8px 20px',
+                  backgroundColor: column === 'A' ? 'rgba(255,255,255,0.2)' : '#6c757d',
+                  color: 'white',
+                  border: column === 'A' ? '1px solid white' : 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate Error Modal */}
+      {showDuplicateWarning && duplicateInfo && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#dc3545',
+            color: 'white',
+            padding: '20px 30px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            maxWidth: '450px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '1.5em', marginBottom: '10px' }}>❌ Fehler</div>
+            <div style={{ fontSize: '1.1em', marginBottom: '20px' }}>
+              Die {column === 'A' ? 'Syskomp neu' : 'Syskomp alt'} Nummer <strong>"{duplicateInfo.number}"</strong> existiert bereits!
+            </div>
+            <div style={{ fontSize: '0.95em', marginBottom: '20px', opacity: 0.9 }}>
+              Syskomp-Nummern müssen eindeutig sein.
+            </div>
+            <button
+              onClick={handleDuplicateCancel}
+              style={{
+                padding: '10px 30px',
+                backgroundColor: 'white',
+                color: '#dc3545',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold'
+              }}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Not Found Warning Modal for Item/Alvaris */}
+      {showNotFoundWarning && notFoundNumber && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#ffc107',
+            color: '#000',
+            padding: '20px 30px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
+            maxWidth: '450px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '1.5em', marginBottom: '10px' }}>⚠️ Hinweis</div>
+            <div style={{ fontSize: '1.1em', marginBottom: '20px' }}>
+              Artikel <strong>"{notFoundNumber}"</strong> existiert im Online-Shop nicht.
+            </div>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={handleNotFoundAccept}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold'
+                }}
+              >
+                Übernehmen
+              </button>
+              <button
+                onClick={handleNotFoundCancel}
+                style={{
+                  padding: '10px 24px',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Abbrechen
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
