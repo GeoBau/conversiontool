@@ -124,12 +124,63 @@ def validate_ask(number: str) -> Tuple[bool, str]:
     return True, "OK"
 
 
+def validate_syskomp_neu(number: str) -> Tuple[bool, str]:
+    """
+    Validiert Syskomp neu Artikelnummer (Spalte A)
+    Genau 9 Ziffern, beginnt mit 1
+    """
+    if not number or not number.strip():
+        return False, "Nummer darf nicht leer sein"
+
+    number = number.strip()
+
+    # Muss genau 9 Zeichen lang sein
+    if len(number) != 9:
+        return False, "Syskomp neu muss genau 9 Ziffern haben"
+
+    # Nur Zahlen erlaubt
+    if not re.match(r'^\d+$', number):
+        return False, "Nur Zahlen sind erlaubt"
+
+    # Muss mit 1 beginnen
+    if not number.startswith('1'):
+        return False, "Syskomp neu muss mit 1 beginnen"
+
+    return True, "OK"
+
+
+def validate_syskomp_alt(number: str) -> Tuple[bool, str]:
+    """
+    Validiert Syskomp alt Artikelnummer (Spalte B)
+    Genau 9 Ziffern, beginnt mit 2 oder 4
+    """
+    if not number or not number.strip():
+        return False, "Nummer darf nicht leer sein"
+
+    number = number.strip()
+
+    # Muss genau 9 Zeichen lang sein
+    if len(number) != 9:
+        return False, "Syskomp alt muss genau 9 Ziffern haben"
+
+    # Nur Zahlen erlaubt
+    if not re.match(r'^\d+$', number):
+        return False, "Nur Zahlen sind erlaubt"
+
+    # Muss mit 2 oder 4 beginnen
+    if not number.startswith('2') and not number.startswith('4'):
+        return False, "Syskomp alt muss mit 2 oder 4 beginnen"
+
+    return True, "OK"
+
+
 def validate_generic(number: str, col: str) -> Tuple[bool, str]:
     """
     Generische Validierung für alle Spalten
     Routet zur spezifischen Validierungsfunktion
 
     Erlaubt "-" als Platzhalter für "keine Nummer"
+    Unterstützt Pipe-getrennte Mehrfachwerte (z.B. "1234567|1234568")
     """
     # Erlaube "-" als gültigen Wert für "keine Nummer"
     if number and number.strip() == '-':
@@ -139,18 +190,35 @@ def validate_generic(number: str, col: str) -> Tuple[bool, str]:
     if not number or not number.strip():
         return True, "OK (leer)"
 
-    if col == 'D':  # Item
-        return validate_item(number)
-    elif col == 'E':  # Bosch
-        return validate_bosch(number)
-    elif col == 'F':  # Alvaris Artnr
-        return validate_alvaris_artnr(number)
-    elif col == 'G':  # Alvaris Matnr
-        return validate_alvaris_matnr(number)
-    elif col == 'H':  # ASK
-        return validate_ask(number)
-    else:
-        return False, f"Spalte {col} kann nicht editiert werden"
+    # Split by pipe for multiple values
+    values = [v.strip() for v in number.split('|') if v.strip()]
+
+    if not values:
+        return True, "OK (leer)"
+
+    # Validate each value
+    for val in values:
+        if col == 'A':  # Syskomp neu
+            valid, msg = validate_syskomp_neu(val)
+        elif col == 'B':  # Syskomp alt
+            valid, msg = validate_syskomp_alt(val)
+        elif col == 'D':  # Item
+            valid, msg = validate_item(val)
+        elif col == 'E':  # Bosch
+            valid, msg = validate_bosch(val)
+        elif col == 'F':  # Alvaris Artnr
+            valid, msg = validate_alvaris_artnr(val)
+        elif col == 'G':  # Alvaris Matnr
+            valid, msg = validate_alvaris_matnr(val)
+        elif col == 'H':  # ASK
+            valid, msg = validate_ask(val)
+        else:
+            return False, f"Spalte {col} kann nicht editiert werden"
+
+        if not valid:
+            return False, f"Wert '{val}': {msg}"
+
+    return True, f"OK ({len(values)} Werte)"
 
 
 def validate_url_exists(url: str, col: str = None, number: str = None, timeout: int = 10) -> Tuple[bool, str]:

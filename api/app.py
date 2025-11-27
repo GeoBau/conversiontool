@@ -60,12 +60,16 @@ def load_data():
 
                 # Index all searchable columns (all except C which is description)
                 # Store as list to support multiple rows with same value
+                # Support pipe-separated values (e.g., "370010|370011" for multiple article numbers)
                 for col_letter in ['A','B','D','E','F','G','H']:
                     value = row_dict.get(col_letter, "")
                     if value:
-                        if value not in data[col_letter]:
-                            data[col_letter][value] = []
-                        data[col_letter][value].append(row_dict)
+                        # Split by pipe to support multiple values per cell
+                        values = [v.strip() for v in value.split('|') if v.strip()]
+                        for single_value in values:
+                            if single_value not in data[col_letter]:
+                                data[col_letter][single_value] = []
+                            data[col_letter][single_value].append(row_dict)
 
                 row_count += 1
 
@@ -478,6 +482,34 @@ def update_entry():
             'syskomp_neu': syskomp_neu,
             'col': col,
             'value': value
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/delete-row', methods=['POST'])
+def delete_row():
+    """Löscht eine komplette Zeile aus der CSV"""
+    try:
+        req_data = request.json
+        syskomp_neu = req_data.get('syskomp_neu', '').strip()
+
+        if not syskomp_neu:
+            return jsonify({'error': 'Syskomp neu erforderlich'}), 400
+
+        # Zeile löschen
+        success, result_message = csv_manager.delete_row(syskomp_neu)
+
+        if not success:
+            return jsonify({'error': result_message}), 500
+
+        # Daten neu laden
+        load_data()
+
+        return jsonify({
+            'success': True,
+            'message': result_message,
+            'syskomp_neu': syskomp_neu
         })
 
     except Exception as e:

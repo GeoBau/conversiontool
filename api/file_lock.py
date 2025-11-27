@@ -226,6 +226,61 @@ class CSVManager:
         finally:
             self.lock.release()
 
+    def delete_row(self, syskomp_neu: str) -> Tuple[bool, str]:
+        """
+        Löscht eine komplette Zeile aus der CSV
+
+        Args:
+            syskomp_neu: Syskomp neu Nummer (zur Identifikation der Zeile)
+
+        Returns:
+            Tuple[bool, str]: (Erfolg, Nachricht)
+        """
+        acquired = self.lock.acquire(timeout=5)
+        if not acquired:
+            return False, "Datei momentan gesperrt. Bitte erneut versuchen."
+
+        try:
+            # Backup erstellen
+            backup_path = self.backup_manager.create_backup(self.csv_path)
+
+            # CSV lesen
+            rows = self.read_all()
+
+            # Zeile finden
+            row_idx, old_row = self.find_row_by_syskomp(syskomp_neu)
+
+            if row_idx == -1:
+                return False, f"Syskomp-Nummer {syskomp_neu} nicht gefunden"
+
+            # Zeile für Undo speichern
+            deleted_row = rows[row_idx].copy()
+
+            # Zeile entfernen
+            del rows[row_idx]
+
+            # Zurück in CSV schreiben
+            self.write_all(rows)
+
+            # Undo-Aktion speichern
+            self.undo_manager.add_action('delete_row', {
+                'syskomp_neu': syskomp_neu,
+                'row_data': deleted_row,
+                'row_index': row_idx,
+                'backup_path': backup_path
+            })
+
+            # Alte Backups aufräumen
+            self.backup_manager.cleanup_old_backups()
+
+            return True, f"Zeile mit Syskomp {syskomp_neu} erfolgreich gelöscht"
+
+        except Exception as e:
+            return False, f"Fehler: {str(e)}"
+
+        finally:
+            self.lock.release()
+
     def undo_last_action(self) -> Tuple[bool, str]:
         """Macht die letzte Aktion rückgängig (wenn < 3 Min alt)"""
         acquired = self.lock.acquire(timeout=5)
@@ -271,6 +326,26 @@ class CSVManager:
                     return True, "Neue Zeile wurde entfernt"
                 else:
                     return False, "Keine Zeile zum Entfernen gefunden"
+
+            elif last_action['type'] == 'delete_row':
+                data = last_action['data']
+
+                # Gelöschte Zeile wiederherstellen
+                rows = self.read_all()
+                row_index = data['row_index']
+                row_data = data['row_data']
+
+                # Zeile an der ursprünglichen Position einfügen
+                if row_index <= len(rows):
+                    rows.insert(row_index, row_data)
+                    self.write_all(rows)
+
+                    # Aktion aus History entfernen
+                    self.undo_manager.remove_last_action()
+
+                    return True, f"Gelöschte Zeile wiederhergestellt (Syskomp: {data['syskomp_neu']})"
+                else:
+                    return False, "Zeile konnte nicht wiederhergestellt werden"
 
             return False, "Aktion kann nicht rückgängig gemacht werden"
 

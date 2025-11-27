@@ -22,20 +22,32 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
 
   const isEmpty = !value || value === '-' || value === ''
 
-  // Check if input has correct length and format for Bosch/ASK
+  // Check if input has correct length and format for Bosch/ASK/Syskomp
+  // Supports pipe-separated multiple values (e.g., "1234567|1234568")
   const isManualTestReady = () => {
     const trimmed = inputValue.trim()
     if (!trimmed) return false
 
-    // Check if only digits
-    if (!/^\d+$/.test(trimmed)) return false
+    // Split by pipe for multiple values
+    const values = trimmed.split('|').map(v => v.trim()).filter(v => v)
+    if (values.length === 0) return false
 
-    if (column === 'E') {
-      return trimmed.length === 10  // Bosch: 10 digits
-    } else if (column === 'H') {
-      return trimmed.length === 8   // ASK: 8 digits
+    // Check each value
+    for (const val of values) {
+      // Check if only digits
+      if (!/^\d+$/.test(val)) return false
+
+      if (column === 'E') {
+        if (val.length !== 10) return false  // Bosch: 10 digits
+      } else if (column === 'H') {
+        if (val.length < 6 || val.length > 8) return false  // ASK: 6-8 digits
+      } else if (column === 'A') {
+        if (val.length !== 9 || !val.startsWith('1')) return false  // Syskomp neu: 9 digits, starts with 1
+      } else if (column === 'B') {
+        if (val.length !== 9 || (!val.startsWith('2') && !val.startsWith('4'))) return false  // Syskomp alt: 9 digits, starts with 2 or 4
+      }
     }
-    return false
+    return true
   }
 
   const handleEdit = () => {
@@ -108,11 +120,17 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
   }
 
   const handleSave = async () => {
-    // For Bosch/ASK: allow saving if format is correct (manual test ready)
+    // For Bosch/ASK/Syskomp: allow saving if format is correct (manual test ready)
     // For Item/Alvaris Artnr/Alvaris Matnr: require validation status 'valid'
-    if (column === 'E' || column === 'H') {
+    if (column === 'E' || column === 'H' || column === 'A' || column === 'B') {
       if (!isManualTestReady()) {
-        setError('Bitte korrekte Anzahl Ziffern eingeben')
+        if (column === 'A') {
+          setError('Syskomp neu: 9 Ziffern, beginnt mit 1')
+        } else if (column === 'B') {
+          setError('Syskomp alt: 9 Ziffern, beginnt mit 2 oder 4')
+        } else {
+          setError('Bitte korrekte Anzahl Ziffern eingeben')
+        }
         return
       }
     } else {
@@ -159,9 +177,9 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      // For Bosch/ASK: allow Enter if format is correct
+      // For Bosch/ASK/Syskomp: allow Enter if format is correct
       // For Item/Alvaris Artnr/Alvaris Matnr: require validation status 'valid'
-      if ((column === 'E' || column === 'H') ? isManualTestReady() : validationStatus === 'valid') {
+      if ((column === 'E' || column === 'H' || column === 'A' || column === 'B') ? isManualTestReady() : validationStatus === 'valid') {
         handleSave()
       }
     } else if (e.key === 'Escape') {
@@ -237,7 +255,7 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
               autoFocus
               disabled={validating || saving}
             />
-            {/* For Bosch and ASK: Manual Test button */}
+            {/* For Bosch, ASK and Syskomp: Manual Test button / Format check only */}
             {(column === 'E' || column === 'H') ? (
               <button
                 onClick={handleManualTest}
@@ -247,6 +265,16 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
               >
                 {validationStatus === 'valid' ? '✓' : 'Man.Test'}
               </button>
+            ) : (column === 'A' || column === 'B') ? (
+              <span className="validate-button" style={{
+                backgroundColor: isManualTestReady() ? '#28a745' : '#6c757d',
+                color: 'white',
+                padding: '4px 8px',
+                borderRadius: '3px',
+                fontSize: '0.85em'
+              }}>
+                {isManualTestReady() ? '✓ OK' : 'Format'}
+              </span>
             ) : (
               <button
                 onClick={handleValidate}
@@ -260,8 +288,8 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
               onClick={handleSave}
               disabled={
                 saving ||
-                ((column === 'E' || column === 'H')
-                  ? !isManualTestReady()  // Bosch/ASK: nur Format-Check
+                ((column === 'E' || column === 'H' || column === 'A' || column === 'B')
+                  ? !isManualTestReady()  // Bosch/ASK/Syskomp: nur Format-Check
                   : validationStatus !== 'valid'  // Item/Alvaris: Validierung erforderlich
                 )
               }
@@ -303,12 +331,17 @@ const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: E
             {validationStatus === 'valid' && !error && column !== 'E' && column !== 'H' && (
               <div className="validation-success">✓ Gültig</div>
             )}
-            {/* Show length requirement for Bosch/ASK */}
-            {(column === 'E' || column === 'H') && inputValue && !error && (
+            {/* Show length requirement for Bosch/ASK/Syskomp */}
+            {(column === 'E' || column === 'H' || column === 'A' || column === 'B') && inputValue && !error && (
               <div className="validation-hint" style={{ fontSize: '0.85em', color: '#666', marginTop: '4px' }}>
                 {column === 'E'
-                  ? `Bosch: ${inputValue.replace(/\D/g, '').length}/10 Ziffern`
-                  : `ASK: ${inputValue.replace(/\D/g, '').length}/8 Ziffern`}
+                  ? `Bosch: 10 Ziffern (mehrere mit | trennen)`
+                  : column === 'H'
+                  ? `ASK: 6-8 Ziffern (mehrere mit | trennen)`
+                  : column === 'A'
+                  ? `Syskomp neu: 9 Ziffern, beginnt mit 1`
+                  : `Syskomp alt: 9 Ziffern, beginnt mit 2 oder 4`}
+                {inputValue.includes('|') && ` - ${inputValue.split('|').filter(v => v.trim()).length} Werte`}
               </div>
             )}
           </div>

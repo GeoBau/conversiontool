@@ -167,6 +167,34 @@ const PortfolioConversion = () => {
     }
   }
 
+  // Handle delete row
+  const handleDeleteRow = async (syskomp_neu: string) => {
+    if (!confirm(`Möchten Sie die gesamte Zeile für Syskomp ${syskomp_neu} wirklich löschen?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/delete-row`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ syskomp_neu }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Fehler beim Löschen')
+      }
+
+      // Nach erfolgreichem Löschen neu suchen
+      await handleSearch()
+
+    } catch (err: any) {
+      setError(err.message || 'Fehler beim Löschen der Zeile')
+    }
+  }
+
   // Handle Ctrl+Click on any number to search for it
   const handleCtrlClickSearch = (number: string) => {
     setSearchNumber(number)
@@ -665,51 +693,25 @@ const PortfolioConversion = () => {
                     Gefunden in: <strong>{match.found_in_col_name}</strong>
                   </div>
                   <div className="result-grid">
-                    {/* Syskomp neu - Always show (nicht editierbar) */}
-                    <div className="result-row highlight">
-                      <span className="result-label">Syskomp neu:</span>
-                      <span className="result-value">
-                        <a
-                          href={`https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_neu)}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="number-link"
-                          onClick={(e) => {
-                            if (e.ctrlKey) {
-                              e.preventDefault()
-                              handleCtrlClickSearch(match.syskomp_neu)
-                            }
-                          }}
-                          title="Ctrl+Klick zum Suchen"
-                        >
-                          {match.syskomp_neu}
-                        </a>
-                      </span>
-                    </div>
+                    {/* Syskomp neu - Editierbar */}
+                    <EditableField
+                      label="Syskomp neu"
+                      value={match.syskomp_neu}
+                      column="A"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'A', value)}
+                      linkUrl={match.syskomp_neu && match.syskomp_neu !== '-' ? `https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_neu)}` : undefined}
+                      onCtrlClick={handleCtrlClickSearch}
+                    />
 
-                    {/* Syskomp alt - Always show (nicht editierbar) */}
-                    {match.syskomp_alt && match.syskomp_alt !== '-' && (
-                      <div className="result-row highlight">
-                        <span className="result-label">Syskomp alt:</span>
-                        <span className="result-value">
-                          <a
-                            href={`https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_alt)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="number-link"
-                            onClick={(e) => {
-                              if (e.ctrlKey) {
-                                e.preventDefault()
-                                handleCtrlClickSearch(match.syskomp_alt)
-                              }
-                            }}
-                            title="Ctrl+Klick zum Suchen"
-                          >
-                            {match.syskomp_alt}
-                          </a>
-                        </span>
-                      </div>
-                    )}
+                    {/* Syskomp alt - Editierbar */}
+                    <EditableField
+                      label="Syskomp alt"
+                      value={match.syskomp_alt}
+                      column="B"
+                      onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'B', value)}
+                      linkUrl={match.syskomp_alt && match.syskomp_alt !== '-' ? `https://shop.syskomp-group.com/de-DE/search?query=${encodeURIComponent(match.syskomp_alt)}` : undefined}
+                      onCtrlClick={handleCtrlClickSearch}
+                    />
 
                     {/* Item - Immer anzeigen, editierbar wenn leer */}
                     <EditableField
@@ -779,6 +781,24 @@ const PortfolioConversion = () => {
                       />
                     </div>
                   )}
+                  {/* Zeile löschen Button */}
+                  <div className="result-row" style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                    <button
+                      onClick={() => handleDeleteRow(match.syskomp_neu)}
+                      style={{
+                        backgroundColor: '#dc3545',
+                        color: 'white',
+                        border: 'none',
+                        padding: '6px 12px',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '0.9em'
+                      }}
+                      title="Gesamte Zeile aus der CSV löschen"
+                    >
+                      Zeile löschen
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
