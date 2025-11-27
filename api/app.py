@@ -59,10 +59,13 @@ def load_data():
                     row_dict[col_letter] = value if value and value != 'None' else ""
 
                 # Index all searchable columns (all except C which is description)
+                # Store as list to support multiple rows with same value
                 for col_letter in ['A','B','D','E','F','G','H']:
                     value = row_dict.get(col_letter, "")
                     if value:
-                        data[col_letter][value] = row_dict
+                        if value not in data[col_letter]:
+                            data[col_letter][value] = []
+                        data[col_letter][value].append(row_dict)
 
                 row_count += 1
 
@@ -136,9 +139,9 @@ def search_all():
         seen_rows = set()  # Track unique rows to avoid duplicates
 
         for col_letter in ['A','B','D','E','F','G','H']:
-            row_data = data.get(col_letter, {}).get(search_value)
+            row_list = data.get(col_letter, {}).get(search_value, [])
 
-            if row_data:
+            for row_data in row_list:
                 # Create a unique key for this row (using Syskomp A and B)
                 row_key = (row_data.get('A', ''), row_data.get('B', ''))
 
@@ -214,16 +217,19 @@ def convert_single():
         if not valid:
             return jsonify({'error': error}), 400
 
-        # Search for number
-        row_data = data.get(from_col, {}).get(search_value)
+        # Search for number (now returns list)
+        row_list = data.get(from_col, {}).get(search_value, [])
 
-        if not row_data:
+        if not row_list:
             return jsonify({
                 'found': False,
                 'search_term': search_value,
                 'from_col': from_col,
                 'to_col': to_col
             })
+
+        # Use first match for single conversion (for backwards compatibility)
+        row_data = row_list[0]
 
         # Get result
         if to_col in ['F', 'G']:
@@ -267,7 +273,9 @@ def convert_single():
             'result_value': result_value,
             'description': description,
             'row_data': row_data,
-            'image': image_info
+            'image': image_info,
+            'multiple_matches': len(row_list) > 1,
+            'match_count': len(row_list)
         })
 
     except Exception as e:
@@ -299,17 +307,20 @@ def batch_convert():
                 })
                 continue
 
-            # Search in all columns
-            row_data = None
+            # Search in all columns (now returns list)
+            row_list = []
             found_in_col = None
 
             for col in ['A','B','D','E','F','G','H']:
                 if search_value in data.get(col, {}):
-                    row_data = data[col][search_value]
+                    row_list = data[col][search_value]
                     found_in_col = col
                     break
 
-            if row_data:
+            if row_list:
+                # Use first match for batch conversion
+                row_data = row_list[0]
+
                 # Validate conversion
                 valid, error = validate_conversion(found_in_col, target_col, mode)
 
@@ -320,7 +331,8 @@ def batch_convert():
                         'input': search_value,
                         'output': result_value if result_value else None,
                         'status': 'success' if result_value else 'not_found',
-                        'from_col': found_in_col
+                        'from_col': found_in_col,
+                        'multiple_matches': len(row_list) > 1
                     })
                 else:
                     results.append({
@@ -752,54 +764,55 @@ def find_similar():
 
         matches = []
 
-        # Durchsuche alle Zeilen im Portfolio CSV
+        # Durchsuche alle Zeilen im Portfolio CSV (now lists)
         for col_letter in ['A']:  # Nur Syskomp neu
-            for syskomp_neu, row_data in data.get(col_letter, {}).items():
-                description = row_data.get('C', '').lower()
+            for syskomp_neu, row_list in data.get(col_letter, {}).items():
+                for row_data in row_list:
+                    description = row_data.get('C', '').lower()
 
-                if not description:
-                    continue
+                    if not description:
+                        continue
 
-                # Filter nach Typ (Item/Bosch)
-                item_nr = row_data.get('D', '')
-                bosch_nr = row_data.get('E', '')
+                    # Filter nach Typ (Item/Bosch)
+                    item_nr = row_data.get('D', '')
+                    bosch_nr = row_data.get('E', '')
 
-                if filter_type == 'item' and not item_nr:
-                    continue
-                if filter_type == 'bosch' and not bosch_nr:
-                    continue
+                    if filter_type == 'item' and not item_nr:
+                        continue
+                    if filter_type == 'bosch' and not bosch_nr:
+                        continue
 
-                # Berechne Ähnlichkeit
-                similarity = SequenceMatcher(None, search_description, description).ratio()
+                    # Berechne Ähnlichkeit
+                    similarity = SequenceMatcher(None, search_description, description).ratio()
 
-                # Bonus für "Profil X" <-> "Nut X" Matching
-                profil_match = re.search(r'profil\s*(\d+)', search_description)
-                nut_match = re.search(r'nut\s*(\d+)', description)
+                    # Bonus für "Profil X" <-> "Nut X" Matching
+                    profil_match = re.search(r'profil\s*(\d+)', search_description)
+                    nut_match = re.search(r'nut\s*(\d+)', description)
 
-                if profil_match and nut_match:
-                    if profil_match.group(1) == nut_match.group(1):
-                        similarity = min(1.0, similarity + 0.3)
+                    if profil_match and nut_match:
+                        if profil_match.group(1) == nut_match.group(1):
+                            similarity = min(1.0, similarity + 0.3)
 
-                # Reverse check
-                nut_match1 = re.search(r'nut\s*(\d+)', search_description)
-                profil_match2 = re.search(r'profil\s*(\d+)', description)
+                    # Reverse check
+                    nut_match1 = re.search(r'nut\s*(\d+)', search_description)
+                    profil_match2 = re.search(r'profil\s*(\d+)', description)
 
-                if nut_match1 and profil_match2:
-                    if nut_match1.group(1) == profil_match2.group(1):
-                        similarity = min(1.0, similarity + 0.3)
+                    if nut_match1 and profil_match2:
+                        if nut_match1.group(1) == profil_match2.group(1):
+                            similarity = min(1.0, similarity + 0.3)
 
-                if similarity >= min_similarity:
-                    matches.append({
-                        'syskomp_neu': row_data.get('A', ''),
-                        'syskomp_alt': row_data.get('B', ''),
-                        'description': row_data.get('C', ''),
-                        'item': row_data.get('D', ''),
-                        'bosch': row_data.get('E', ''),
-                        'alvaris_artnr': row_data.get('F', ''),
-                        'alvaris_matnr': row_data.get('G', ''),
-                        'ask': row_data.get('H', ''),
-                        'similarity': similarity
-                    })
+                    if similarity >= min_similarity:
+                        matches.append({
+                            'syskomp_neu': row_data.get('A', ''),
+                            'syskomp_alt': row_data.get('B', ''),
+                            'description': row_data.get('C', ''),
+                            'item': row_data.get('D', ''),
+                            'bosch': row_data.get('E', ''),
+                            'alvaris_artnr': row_data.get('F', ''),
+                            'alvaris_matnr': row_data.get('G', ''),
+                            'ask': row_data.get('H', ''),
+                            'similarity': similarity
+                        })
 
         # Sortiere nach Ähnlichkeit (höchste zuerst)
         matches.sort(key=lambda x: x['similarity'], reverse=True)

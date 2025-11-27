@@ -167,6 +167,43 @@ const PortfolioConversion = () => {
     }
   }
 
+  // Handle Ctrl+Click on any number to search for it
+  const handleCtrlClickSearch = (number: string) => {
+    setSearchNumber(number)
+    // Trigger search with the new number
+    setTimeout(async () => {
+      setLoading(true)
+      setError(null)
+      setResult(null)
+
+      try {
+        const response = await fetch(`${API_URL}/search`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            number: number.trim()
+          }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'API Fehler')
+        }
+
+        const data: SearchResult = await response.json()
+        setResult(data)
+
+      } catch (err: any) {
+        setError(err.message || 'Fehler bei der Suche.')
+        console.error(err)
+      } finally {
+        setLoading(false)
+      }
+    }, 0)
+  }
+
   // Batch conversion functions
   const columnLetterToIndex = (letter: string): number => {
     return letter.toUpperCase().charCodeAt(0) - 65
@@ -637,6 +674,13 @@ const PortfolioConversion = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="number-link"
+                          onClick={(e) => {
+                            if (e.ctrlKey) {
+                              e.preventDefault()
+                              handleCtrlClickSearch(match.syskomp_neu)
+                            }
+                          }}
+                          title="Ctrl+Klick zum Suchen"
                         >
                           {match.syskomp_neu}
                         </a>
@@ -653,6 +697,13 @@ const PortfolioConversion = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="number-link"
+                            onClick={(e) => {
+                              if (e.ctrlKey) {
+                                e.preventDefault()
+                                handleCtrlClickSearch(match.syskomp_alt)
+                              }
+                            }}
+                            title="Ctrl+Klick zum Suchen"
                           >
                             {match.syskomp_alt}
                           </a>
@@ -667,6 +718,7 @@ const PortfolioConversion = () => {
                       column="D"
                       onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'D', value)}
                       linkUrl={match.item && match.item !== '-' ? `https://www.item24.com/de-de/search/?q=${encodeURIComponent(match.item)}` : undefined}
+                      onCtrlClick={handleCtrlClickSearch}
                     />
 
                     {/* Bosch - Immer anzeigen, editierbar wenn leer */}
@@ -676,6 +728,7 @@ const PortfolioConversion = () => {
                       column="E"
                       onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'E', value)}
                       linkUrl={match.bosch && match.bosch !== '-' ? `https://www.boschrexroth.com/de/de/search.html?q=${encodeURIComponent(match.bosch)}&origin=header` : undefined}
+                      onCtrlClick={handleCtrlClickSearch}
                     />
 
                     {/* Alvaris Artnr - Immer anzeigen, editierbar wenn leer */}
@@ -685,6 +738,7 @@ const PortfolioConversion = () => {
                       column="F"
                       onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'F', value)}
                       linkUrl={match.alvaris_artnr && match.alvaris_artnr !== '-' ? `https://www.alvaris.com/de/?s=${encodeURIComponent(match.alvaris_artnr)}&trp-form-language=de` : undefined}
+                      onCtrlClick={handleCtrlClickSearch}
                     />
 
                     {/* Alvaris Matnr - Immer anzeigen, editierbar wenn leer */}
@@ -693,6 +747,7 @@ const PortfolioConversion = () => {
                       value={match.alvaris_matnr}
                       column="G"
                       onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'G', value)}
+                      onCtrlClick={handleCtrlClickSearch}
                     />
 
                     {/* ASK - Immer anzeigen, editierbar wenn leer */}
@@ -702,6 +757,7 @@ const PortfolioConversion = () => {
                       column="H"
                       onSave={async (value) => await handleUpdateEntry(match.syskomp_neu, 'H', value)}
                       linkUrl={match.ask && match.ask !== '-' ? 'https://askgmbh.com/auctores/scs/imc' : undefined}
+                      onCtrlClick={handleCtrlClickSearch}
                     />
                   </div>
                   {match.description && (

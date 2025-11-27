@@ -174,12 +174,12 @@ def validate_url_exists(url: str, col: str = None, number: str = None, timeout: 
             else:
                 return False, f"Fehler beim Laden (Status: {response.status_code})"
 
-        # Für Item (Spalte D): Prüfe auf "1 Treffer" in der Antwort
+        # Für Item (Spalte D): Prüfe auf "0 Treffer" in der Antwort
         if col == 'D':
-            if "1 Treffer" in response.text:
-                return True, "Artikel gefunden (1 Treffer)"
+            if "0 Treffer" in response.text:
+                return False, "Artikel nicht gefunden (0 Treffer)"
             else:
-                return False, "Artikel nicht gefunden (kein '1 Treffer' auf der Seite)"
+                return True, "Artikel gefunden"
 
         # Für Alvaris (Spalte F/G): Prüfe ob Artikelnummer in uk-link-reset Link erscheint
         if col in ['F', 'G'] and number:

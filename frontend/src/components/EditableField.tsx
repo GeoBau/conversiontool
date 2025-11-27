@@ -7,11 +7,12 @@ interface EditableFieldProps {
   column: string  // D=Item, E=Bosch, F=Alvaris Artnr, H=ASK
   onSave: (value: string) => Promise<void>
   linkUrl?: string
+  onCtrlClick?: (value: string) => void  // Ctrl+Click handler for search
 }
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
-const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldProps) => {
+const EditableField = ({ label, value, column, onSave, linkUrl, onCtrlClick }: EditableFieldProps) => {
   const [isEditing, setIsEditing] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [validating, setValidating] = useState(false)
@@ -168,6 +169,15 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
     }
   }
 
+  // Handle Ctrl+Click to trigger search
+  const handleNumberClick = (e: React.MouseEvent) => {
+    if (e.ctrlKey && onCtrlClick && value && value !== '-') {
+      e.preventDefault()
+      e.stopPropagation()
+      onCtrlClick(value)
+    }
+  }
+
   return (
     <div className="result-row">
       <span className="result-label">{label}:</span>
@@ -182,11 +192,20 @@ const EditableField = ({ label, value, column, onSave, linkUrl }: EditableFieldP
                     target="_blank"
                     rel="noopener noreferrer"
                     className="number-link"
+                    onClick={handleNumberClick}
+                    style={{ cursor: onCtrlClick ? 'pointer' : undefined }}
+                    title={onCtrlClick ? 'Ctrl+Klick zum Suchen' : undefined}
                   >
                     {value}
                   </a>
                 ) : (
-                  <span>{value}</span>
+                  <span
+                    onClick={handleNumberClick}
+                    style={{ cursor: onCtrlClick ? 'pointer' : undefined }}
+                    title={onCtrlClick ? 'Ctrl+Klick zum Suchen' : undefined}
+                  >
+                    {value}
+                  </span>
                 )}
                 <button
                   onClick={handleEdit}
