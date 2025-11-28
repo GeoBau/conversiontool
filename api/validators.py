@@ -105,7 +105,7 @@ def validate_alvaris_matnr(number: str) -> Tuple[bool, str]:
 def validate_ask(number: str) -> Tuple[bool, str]:
     """
     Validiert ASK-Artikelnummer
-    Nur Zahlen erlaubt
+    Zahlen und Buchstaben erlaubt
     6 bis 8 Zeichen
     """
     if not number or not number.strip():
@@ -117,9 +117,9 @@ def validate_ask(number: str) -> Tuple[bool, str]:
     if len(number) < 6 or len(number) > 8:
         return False, "ASK-Nummer muss 6-8 Zeichen haben"
 
-    # Nur Zahlen erlaubt
-    if not re.match(r'^\d+$', number):
-        return False, "Nur Zahlen sind erlaubt"
+    # Zahlen und Buchstaben erlaubt
+    if not re.match(r'^[A-Za-z0-9]+$', number):
+        return False, "Nur Zahlen und Buchstaben sind erlaubt"
 
     return True, "OK"
 
